@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Test private key
+wallet.json
+
 # C extensions
 *.so
 
