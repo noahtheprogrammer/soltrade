@@ -1,29 +1,29 @@
-from solana.rpc.api import Client
 import wallet
-import requests
+import trading
+import time
 
-sol_wallet = wallet.keypair.public_key
-
-# Client used for interacting with the Solana network
-client = Client("https://api.devnet.solana.com")
-
-# Returns the current balance of Solana in the wallet
-def findSolBalance():
-    balance_response = client.get_balance(sol_wallet).value
-    balance_response = balance_response / 1000000000
-    return(balance_response)
-
-# Returns the current balance of USDC in the wallet
-# Currently not functional but I will find the proper method to use
-def findUSDCBalance():
-    usdc_balance = client.get_token_account_balance(sol_wallet).value.amount
-    return(usdc_balance)
-
-sol_balance = findSolBalance()
-
-# Returns the current price of Solana using a GET request
-def findPrice():
-    price_api = 'https://api.coinbase.com/v2/prices/SOL-USD/buy'
-    response = requests.get(price_api)
-    json_response = response.json()
-    return(json_response["data"]["amount"])
+print("""
+ __    __     ______     ______     __  __    
+/\ "-./  \   /\  ___\   /\  == \   /\_\_\_\   
+\ \ \-./\ \  \ \  __\   \ \  __<   \/_/\_\/_  
+ \ \_\ \ \_\  \ \_____\  \ \_\ \_\   /\_\/\_\ 
+  \/_/  \/_/   \/_____/   \/_/ /_/   \/_/\/_/ 
+""")
+print("Version 0.0.1")
+time.sleep(1)
+wallet.checkJSONState()
+time.sleep(1)
+print("Your wallet currently is holding " + str(wallet.findSolBalance()) + " SOL and " + str(wallet.findUSDCBalance()) + " USDC tokens.")
+time.sleep(2)
+def merxPrompt():
+    print("Would you like to initialize Merx? Please answer yes or no.")
+    prompt = input()
+    if (prompt.lower() == "yes"):
+        trading.startTrading()
+    elif (prompt.lower() == "no"):
+        print("Merx will now shut down.")
+        time.sleep(2)
+        exit()
+    else:
+        merxPrompt()
+merxPrompt()
