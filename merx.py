@@ -5,7 +5,7 @@ import time
 # Variable used to store the current functionality of Merx
 can_run = None
 
-# Prints information about Merx and the connected wallet
+# Prints "Merx" and information about the connected wallet
 print("""
  __    __     ______     ______     __  __    
 /\ "-./  \   /\  ___\   /\  == \   /\_\_\_\   
@@ -13,7 +13,6 @@ print("""
  \ \_\ \ \_\  \ \_____\  \ \_\ \_\   /\_\/\_\ 
   \/_/  \/_/   \/_____/   \/_/ /_/   \/_/\/_/ 
 """)
-print("Version 0.0.1")
 can_run = wallet.checkJSONState()
 
 # Error catching in case the program is unable to find the properties of the wallet

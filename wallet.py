@@ -3,6 +3,7 @@ from solana.rpc.api import Client
 from solana.rpc.types import TokenAccountOpts
 from solana.publickey import PublicKey
 import base58
+import os
 import os.path
 import json
 import requests
@@ -16,6 +17,9 @@ class colors:
     WARNING = '\033[93m'
     FAIL = '\033[91m'
     ENDC = '\033[0m'
+
+# Called in order to natively display colors in Windows
+os.system("")
 
 # These are null variables which are assigned depending on the contents within the wallet.json
 keypair = None
