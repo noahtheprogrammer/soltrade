@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 # Test private key
-wallet.json
+config.json
 
 # C extensions
 *.so
