@@ -17,7 +17,7 @@ can_run = wallet.checkJSONState()
 
 # Error catching in case the program is unable to find the properties of the wallet
 try:
-    print("Your wallet is currently holding " + str(wallet.findSolBalance()) + " SOL and " + str(wallet.findUSDCBalance()) + " USDC.")
+    print(f"Your wallet is currently holding {wallet.findSolBalance()} SOL and {wallet.findUSDCBalance()} USDC.")
 except:
     print("Merx was unable to find wallet values for the given conditions.")
 

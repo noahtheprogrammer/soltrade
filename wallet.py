@@ -21,6 +21,10 @@ class colors:
 # Called in order to natively display colors in Windows
 os.system("")
 
+# Client used for interacting with the Solana network
+# client = Client("https://api.devnet.solana.com")
+client = Client("https://api.mainnet-beta.solana.com/")
+
 # These are null variables which are assigned depending on the contents within the wallet.json
 keypair = None
 keypair_seed = None
@@ -34,7 +38,9 @@ def checkJSONState():
         with open('config.json', 'r') as openfile:
             try:
                 key_object = json.load(openfile)
+                global keypair_seed
                 keypair_seed = key_object["private_key"]
+                global keypair
                 keypair = Keypair.from_secret_key(base58.b58decode(keypair_seed))
                 global wallet_address
                 wallet_address = keypair.public_key
@@ -50,13 +56,10 @@ def checkJSONState():
         print(colors.WARNING + "Merx was unable to detect the JSON file. Are you sure config.json has not been renamed or removed?" + colors.ENDC)
         return False
 
-# Client used for interacting with the Solana network
-client = Client("https://api.devnet.solana.com")
-
 # Returns the current balance of Solana in the wallet
 def findSolBalance():
     balance_response = client.get_balance(wallet_address).value
-    balance_response = balance_response / 1000000000
+    balance_response = balance_response / (10**9)
     return(balance_response)
 
 # Returns the current balance of the USDC token in the wallet
