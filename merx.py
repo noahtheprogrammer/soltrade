@@ -1,6 +1,5 @@
 import wallet
 import trading
-import time
 
 # Variable used to store the current functionality of Merx
 can_run = None

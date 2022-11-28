@@ -1,9 +1,8 @@
 import wallet
 import httpx
-import requests
 import base64
 import asyncio
-import json
+import time
 from solana.rpc.commitment import Confirmed
 from solana.rpc.types import TxOpts
 from solana.transaction import Transaction
@@ -55,13 +54,15 @@ def sendTransaction(swap_transaction, opts):
     txid = result.value
     return(txid)
 
+# Uses the previous functions and parameters to exchange Solana token currencies
 async def performSwap(sent_amount, sent_token_mint):
-    wallet.checkJSONState()
 
+    # Creates exchange and transaction values to be used in sendTransaction() calls
     transaction_route = await createExchange(sent_amount, sent_token_mint)
     quote = transaction_route["data"][0]
     trans = await createTransaction(quote)
 
+    # Variables that store each of the transaction values and revert to None if it doesn't exist
     setup_transaction = trans["setupTransaction"] if "setupTransaction" in trans else None
     swap_transaction = trans["swapTransaction"] if "swapTransaction" in trans else None
     cleanup_transaction = trans["cleanupTransaction"] if "cleanupTransaction" in trans else None
@@ -69,21 +70,22 @@ async def performSwap(sent_amount, sent_token_mint):
 
     # This sets up the swap transaction and starts by converting the inputed Solana amount into the wSOL equivalent
     if setup_transaction:
-        print("Sending setup transaction")
+        print("Sending setup transaction...")
         sendTransaction(setup_transaction, opts)
     
     # This swaps the Solana or wSOL token from the setup transaction for the USDC token
     if swap_transaction:
-        print("Sending swap transaction")
+        print("Sending swap transaction...")
         txid = sendTransaction(swap_transaction, opts)
-        
-        # Wait for the transaction to complete before looking it up on chain. 
-        # Clearly this is *not* the right way to do this. Retry in a loop or something fancy.
-        result = wallet.client.get_transaction(txid, commitment=Confirmed)
-        print(result)
+
+        # Retries if the transaction details are equivalent to None
+        while (wallet.client.get_transaction(txid, commitment=Confirmed).value == None):
+            print("Retrying swap transaction...")
+            txid = sendTransaction(swap_transaction, opts)
+            asyncio.sleep(2)
     
     # This sends the final transaction in order to complete the swap
     if cleanup_transaction:
-        print("Sending send transaction")
+        print("Sending cleanup transaction...")
         sendTransaction(cleanup_transaction, opts)
     print("Swap Complete!")
