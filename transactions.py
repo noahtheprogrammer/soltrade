@@ -66,7 +66,7 @@ async def performSwap(sent_amount, sent_token_mint):
     setup_transaction = trans["setupTransaction"] if "setupTransaction" in trans else None
     swap_transaction = trans["swapTransaction"] if "swapTransaction" in trans else None
     cleanup_transaction = trans["cleanupTransaction"] if "cleanupTransaction" in trans else None
-    opts = TxOpts(skip_preflight=True)
+    opts = TxOpts(skip_confirmation=False, skip_preflight=True)
 
     # This sets up the swap transaction and starts by converting the inputed Solana amount into the wSOL equivalent
     if setup_transaction:
@@ -75,14 +75,17 @@ async def performSwap(sent_amount, sent_token_mint):
     
     # This swaps the Solana or wSOL token from the setup transaction for the USDC token
     if swap_transaction:
-        print("Sending swap transaction...")
-        txid = sendTransaction(swap_transaction, opts)
-
-        # Retries if the transaction details are equivalent to None
-        while (wallet.client.get_transaction(txid, commitment=Confirmed).value == None):
+    
+    # This swaps the Solana or wSOL token from the setup transaction for the USDC token
+    if swap_transaction:
+        
+        # If an error is thrown because the confirmation failed, retry the transaction one more time
+        try:
+            print("Sending swap transaction...")
+            sendTransaction(swap_transaction, opts)
+        except:
             print("Retrying swap transaction...")
-            txid = sendTransaction(swap_transaction, opts)
-            asyncio.sleep(2)
+            sendTransaction(swap_transaction, opts)
     
     # This sends the final transaction in order to complete the swap
     if cleanup_transaction:
