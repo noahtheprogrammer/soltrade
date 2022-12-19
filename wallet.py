@@ -40,12 +40,13 @@ def checkJSONState():
                 key_object = json.load(openfile)
                 global keypair_seed
                 keypair_seed = key_object["private_key"]
+                key_object["api_key"]
                 global keypair
                 keypair = Keypair.from_secret_key(base58.b58decode(keypair_seed))
                 global wallet_address
                 wallet_address = keypair.public_key
                 openfile.close
-                print(colors.OKGREEN + "Merx has successfully imported the private key from the JSON file." + colors.ENDC)
+                print(colors.OKGREEN + "Merx has successfully imported the private keys from the JSON file." + colors.ENDC)
                 return True
             except:
                 print(colors.WARNING + "Merx was unable to parse the JSON file. Are you sure config.json is formatted properly?" + colors.ENDC)

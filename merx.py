@@ -5,12 +5,12 @@ import trading
 can_run = None
 
 # Prints "Merx" and information about the connected wallet
-print("""
- __    __     ______     ______     __  __    
-/\ "-./  \   /\  ___\   /\  == \   /\_\_\_\   
-\ \ \-./\ \  \ \  __\   \ \  __<   \/_/\_\/_  
- \ \_\ \ \_\  \ \_____\  \ \_\ \_\   /\_\/\_\ 
-  \/_/  \/_/   \/_____/   \/_/ /_/   \/_/\/_/ 
+print("""                        
+ ________   ___ ______  __
+|  _   _ \ / _ \  __\ \/ /
+| | | | | |  __/ |   >  < 
+|_| |_| |_|\___|_|  /_/\_\
+                                            
 """)
 can_run = wallet.checkJSONState()
 
@@ -22,7 +22,7 @@ except:
 
 # Function called depending on whether Merx can run properly
 def merxPrompt():
-    print("Would you like to initialize Merx? Please answer yes or no.")
+    print("Would you like to initialize Merx? Y/N")
     prompt = input()
     if (prompt.lower() == "yes" or prompt.lower() == "y"):
         trading.startTrading()
