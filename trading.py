@@ -52,6 +52,10 @@ def analyzeCandlestick():
     lo = df['low']
     cl = df['close']
 
+    # Calculates the ADX for the OHLC information specified
+    adx_df = talib.ADX(hi, lo, cl, timeperiod=8)
+    adx = adx_df.iat[-1]
+
     for candle in candle_names:
         df[candle] = getattr(talib, candle)(op, hi, lo, cl)
 
@@ -87,6 +91,7 @@ def analyzeCandlestick():
                     container.append(pattern + '_Bull')
                 else:
                     container.append(pattern + '_Bear')
+
             rank_list = [rankings.candle_rankings[p] for p in container]
             if len(rank_list) == len(container):
                 rank_index_best = rank_list.index(min(rank_list))
@@ -96,4 +101,4 @@ def analyzeCandlestick():
     # Cleans up candlestick dataframe for viewing
     df.drop(candle_names, axis = 1, inplace = True)
 
-analyzeCandlestick()
+print(analyzeCandlestick())
