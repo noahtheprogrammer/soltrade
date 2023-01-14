@@ -6,8 +6,8 @@ import logging
 import threading
 import talib
 import transactions
+from recognition import fear
 from recognition import rankings
-from recognition import fgi
 from itertools import compress
 
 import test_values
@@ -15,7 +15,7 @@ import test_values
 logging.basicConfig(level=logging.INFO, filename='app.log', filemode='a', format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
 last_traded_sol_price = None
-last_traded_coin = "$SOL"
+last_traded_coin = "sol"
 
 # This will eventually be filled with miscellaneous algorithms and other such information crucial to trading.
 def startTrading():
@@ -32,18 +32,17 @@ def importKey():
 # Initialize variable to store imported key
 api_key = importKey()
 
-# Fetches the CryptoCompare candlestick chart in one minute intervals
+# Fetches the OHLCV information for the thirty minutes
 def fetchCandlestick():
 
-    # Parameters for use in the json application
     url = "https://min-api.cryptocompare.com/data/v2/histominute"
     headers = {'authorization': api_key}
-    params = {'fsym': 'SOL', 'tsym': 'USD', 'limit': 15}
+    params = {'fsym': 'SOL', 'tsym': 'USD', 'limit': 24, 'aggregate': 30}
     response = requests.get(url, headers=headers, params=params)
     return(response.json())
 
 # Basic trading algorithm that determines what trade to perform with parameters
-def determineTrade(pattern, fear_greed_index, adx, current_sol_price):
+def determineTrade(pattern, pattern_match, adx, obv, fgi, current_sol_price):
 
     current_sol_balance = test_values.sol_balance
     current_usdc_balance = test_values.usdc_balance
@@ -51,44 +50,53 @@ def determineTrade(pattern, fear_greed_index, adx, current_sol_price):
     global last_traded_coin
     global last_traded_sol_price
 
-    if (last_traded_sol_price == None):
-        last_traded_sol_price = current_sol_price
-
     if ("_Bull" in pattern):
-        if (last_traded_coin == "$USDC"):
-            if (((current_usdc_balance/last_traded_sol_price) * 1.05) <= ((current_usdc_balance/current_sol_price) * 0.99)):
-                if ((adx >= 22.5) or (50 < fear_greed_index < 100)):
-                    logging.info(f"BULLISH_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
-                    test_values.performSwap(round(current_usdc_balance, 2), transactions.usdc_mint, current_sol_price)
-                    last_traded_sol_price = current_sol_price
-                    last_traded_coin = "$SOL"
+        if ((obv > 0) or (adx >= 25) or (pattern_match >= 2.0)):
+            if (last_traded_coin == "usdc"):
+                logging.info(f"BULLISH_TRADE_{current_usdc_balance}USDC_TO_{(current_usdc_balance)/current_sol_price}SOL_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}")
+                test_values.performSwap(current_usdc_balance, transactions.usdc_mint, current_sol_price)
+                last_traded_sol_price = current_sol_price
+                last_traded_coin = "sol"
+            else:
+                logging.info(f"BULLISH_HOLD_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
+
         else:
-            logging.info(f"BULLISH_NO_TRADE_PERFORMED_FGI{fear_greed_index}_ADX{adx}_PRICE{current_sol_price}")
+            if ((last_traded_coin == "usdc")):
+                logging.info(f"BULLISH_BREAKOUT_TRADE_{current_usdc_balance}USDC_TO_{(current_usdc_balance)/current_sol_price}SOL_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}")
+                test_values.performSwap(current_usdc_balance, transactions.usdc_mint, current_sol_price)
+                last_traded_sol_price = current_sol_price
+                last_traded_coin = "sol"
+            else:
+                logging.info(f"BULLISH_BREAKOUT_HOLD_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
 
     if ("_Bear" in pattern):
-        if (last_traded_coin == "$SOL"):
-            if ((last_traded_sol_price) <= (current_sol_price * 0.99)):
+
+        if ((obv < 0) or (adx >= 25) or (pattern_match >= 2.0)):
+            if (last_traded_coin == "sol"):
                 logging.info(f"BEARISH_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
-                test_values.performSwap(round(current_sol_balance, 2), transactions.sol_mint, current_sol_price)
+                test_values.performSwap(current_sol_balance, transactions.sol_mint, current_sol_price)
                 last_traded_sol_price = current_sol_price
-                last_traded_coin = "$USDC"
+                last_traded_coin = "usdc"
+            else:
+                logging.info(f"BEARISH_HOLD_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
 
         else:
-            if (((current_usdc_balance/last_traded_sol_price) * 1.05) <= ((current_usdc_balance/current_sol_price) * 0.99)):
-                    logging.info(f"BEARISH_TRADE_{current_usdc_balance}USDC_TO_{current_usdc_balance/last_traded_sol_price}SOL")
-                    test_values.performSwap(round(current_usdc_balance, 2), transactions.usdc_mint, current_sol_price)
-                    last_traded_sol_price = current_sol_price
-                    last_traded_coin = "$SOL"
+            if ((last_traded_coin == "sol")):
+                logging.info(f"BEARISH_BREAKOUT_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
+                test_values.performSwap(current_sol_balance, transactions.sol_mint, current_sol_price)
+                last_traded_sol_price = current_sol_price
+                last_traded_coin = "usdc"
             else:
-                logging.info(f"BEARISH_NO_TRADE_PERFORMED_FGI{fear_greed_index}_ADX{adx}_PRICE{current_sol_price}")
+                logging.info(f"BEARISH_BREAKOUT_HOLD_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
 
     if ("NO_PATTERN" in pattern):
-        logging.info(f"NEUTRAL_NO_TRADE_PERFORMED_FGI{fear_greed_index}_ADX{adx}_PRICE{current_sol_price}")
+        logging.info(f"NO_TRADE_PERFORMED_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
+
 
 # Analyzes the candlestick for most likely pattern
 def performAnalysis():
 
-    threading.Timer(300.0, performAnalysis).start()
+    threading.Timer(1800.0, performAnalysis).start()
 
     # Converts fetchCandlestick() response for usage in DataFrame
     candle_json = fetchCandlestick()
@@ -105,12 +113,28 @@ def performAnalysis():
     lo = df['low']
     cl = df['close']
 
-    # Calculates the ADX for the OHLC information specified
+    # Calculates the ADX
     adx_df = talib.ADX(hi, lo, cl, timeperiod=8)
     adx = adx_df.iat[-1]
+    
+    # Calculates the ATR
+    atr_df = talib.ATR(hi, lo, cl, timeperiod=8)
+    atr = atr_df.iat[-1]
 
-    # Uses Alternative to find daily updated FGI
-    fg_index = fgi.findFGI()
+    # Calculates the OBV
+    obv_df = []
+    obv_df.append(0)
+    for i in range(1, len(df['close'])):
+        if (df['close'].iat[i] > df['close'].iat[i-1]):
+            obv_df.append(obv_df[-1] + df['volumeto'].iat[i])
+        elif (df['close'].iat[i] < df['close'].iat[i-1]):
+            obv_df.append(obv_df[-1] - df['volumeto'].iat[i])
+        else:
+            obv_df.append(obv_df[-1])
+    obv = obv_df[-1]
+
+    # Finds FGI
+    fgi = fear.findFGI()
     
     # Gets candlestick pattern names for analzing
     candle_names = talib.get_function_groups()['Pattern Recognition']
@@ -140,12 +164,11 @@ def performAnalysis():
         # Runs if a single pattern is found
         elif len(row[candle_names]) - sum(row[candle_names] == 0) == 1:
 
-            # A bullish pattern is a 100 or 200 value
             if any(row[candle_names].values > 0):
                 pattern = list(compress(row[candle_names].keys(), row[candle_names].values != 0))[0] + '_Bull'
                 df.loc[index, 'candlestick_pattern'] = pattern
                 df.loc[index, 'candlestick_match_count'] = 1
-            # A bearish pattern is a -100 or -200 value
+
             else:
                 pattern = list(compress(row[candle_names].keys(), row[candle_names].values != 0))[0] + '_Bear'
                 df.loc[index, 'candlestick_pattern'] = pattern
@@ -169,7 +192,6 @@ def performAnalysis():
 
     # Cleans up candlestick dataframe for viewing
     df.drop(candle_names + list(excluded_names), axis = 1, inplace = True)
-
-    determineTrade(df['candlestick_pattern'].iat[-1] ,fg_index, adx, df['close'].iat[-1])
+    determineTrade(df['candlestick_pattern'].iat[-1], df['candlestick_match_count'].iat[-1], adx, obv, fgi, df['close'].iat[-1])
 
 performAnalysis()
