@@ -32,17 +32,17 @@ def importKey():
 # Initialize variable to store imported key
 api_key = importKey()
 
-# Fetches the OHLCV information for the thirty minutes
+# Fetches the OHLCV information in fifteen minute intervals
 def fetchCandlestick():
 
     url = "https://min-api.cryptocompare.com/data/v2/histominute"
     headers = {'authorization': api_key}
-    params = {'fsym': 'SOL', 'tsym': 'USD', 'limit': 24, 'aggregate': 30}
+    params = {'fsym': 'SOL', 'tsym': 'USD', 'limit': 50, 'aggregate': 15}
     response = requests.get(url, headers=headers, params=params)
     return(response.json())
 
 # Basic trading algorithm that determines what trade to perform with parameters
-def determineTrade(pattern, pattern_match, adx, obv, fgi, current_sol_price):
+def determineTrade(pattern, ema5, ema20, adx, obv, fgi, current_sol_price):
 
     current_sol_balance = test_values.sol_balance
     current_usdc_balance = test_values.usdc_balance
@@ -51,7 +51,7 @@ def determineTrade(pattern, pattern_match, adx, obv, fgi, current_sol_price):
     global last_traded_sol_price
 
     if ("_Bull" in pattern):
-        if ((obv > 0) or (adx >= 25) or (pattern_match >= 2.0)):
+        if ((obv > 0) or (adx >= 25) or (ema5 - ema20 > 0)):
             if (last_traded_coin == "usdc"):
                 logging.info(f"BULLISH_TRADE_{current_usdc_balance}USDC_TO_{(current_usdc_balance)/current_sol_price}SOL_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}")
                 test_values.performSwap(current_usdc_balance, transactions.usdc_mint, current_sol_price)
@@ -71,7 +71,7 @@ def determineTrade(pattern, pattern_match, adx, obv, fgi, current_sol_price):
 
     if ("_Bear" in pattern):
 
-        if ((obv < 0) or (adx >= 25) or (pattern_match >= 2.0)):
+        if ((obv < 0) or (adx >= 25) or (ema5 - ema20 < 0)):
             if (last_traded_coin == "sol"):
                 logging.info(f"BEARISH_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
                 test_values.performSwap(current_sol_balance, transactions.sol_mint, current_sol_price)
@@ -96,7 +96,7 @@ def determineTrade(pattern, pattern_match, adx, obv, fgi, current_sol_price):
 # Analyzes the candlestick for most likely pattern
 def performAnalysis():
 
-    threading.Timer(1800.0, performAnalysis).start()
+    threading.Timer(900.0, performAnalysis).start()
 
     # Converts fetchCandlestick() response for usage in DataFrame
     candle_json = fetchCandlestick()
@@ -112,28 +112,15 @@ def performAnalysis():
     hi = df['high']
     lo = df['low']
     cl = df['close']
+    vl = df['volumeto'] + df['volumefrom']
 
-    # Calculates the ADX
-    adx_df = talib.ADX(hi, lo, cl, timeperiod=8)
-    adx = adx_df.iat[-1]
-    
-    # Calculates the ATR
-    atr_df = talib.ATR(hi, lo, cl, timeperiod=8)
-    atr = atr_df.iat[-1]
+    # DataFrames for technical analysis
+    adx_df = talib.ADX(hi, lo, cl, timeperiod=12)
+    ema5_df = talib.EMA(cl, timeperiod=5)
+    ema20_df = talib.EMA(cl, timeperiod=20)
+    obv_df = talib.OBV(cl, vl)
 
-    # Calculates the OBV
-    obv_df = []
-    obv_df.append(0)
-    for i in range(1, len(df['close'])):
-        if (df['close'].iat[i] > df['close'].iat[i-1]):
-            obv_df.append(obv_df[-1] + df['volumeto'].iat[i])
-        elif (df['close'].iat[i] < df['close'].iat[i-1]):
-            obv_df.append(obv_df[-1] - df['volumeto'].iat[i])
-        else:
-            obv_df.append(obv_df[-1])
-    obv = obv_df[-1]
-
-    # Finds FGI
+    # Returns the daily crypto FGI
     fgi = fear.findFGI()
     
     # Gets candlestick pattern names for analzing
@@ -192,6 +179,6 @@ def performAnalysis():
 
     # Cleans up candlestick dataframe for viewing
     df.drop(candle_names + list(excluded_names), axis = 1, inplace = True)
-    determineTrade(df['candlestick_pattern'].iat[-1], df['candlestick_match_count'].iat[-1], adx, obv, fgi, df['close'].iat[-1])
+    determineTrade(df['candlestick_pattern'].iat[-1], ema5_df.iat[-1], ema20_df.iat[-1], adx_df.iat[-1], obv_df.iat[-1], fgi, cl.iat[-1])
 
 performAnalysis()
