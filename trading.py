@@ -42,7 +42,7 @@ def fetchCandlestick():
     return(response.json())
 
 # Basic trading algorithm that determines what trade to perform with parameters
-def determineTrade(pattern, ema5, ema20, adx, obv, fgi, current_sol_price):
+def determineTrade(pattern, ema5, ema20, ema50, adx, obv, fgi, current_sol_price):
 
     current_sol_balance = test_values.sol_balance
     current_usdc_balance = test_values.usdc_balance
@@ -51,7 +51,7 @@ def determineTrade(pattern, ema5, ema20, adx, obv, fgi, current_sol_price):
     global last_traded_sol_price
 
     if ("_Bull" in pattern):
-        if ((obv > 0) or (adx >= 25) or (ema5 - ema20 > 0)):
+        if ((obv > 0) or (adx >= 25) or (ema5 > ema20)):
             if (last_traded_coin == "usdc"):
                 logging.info(f"BULLISH_TRADE_{current_usdc_balance}USDC_TO_{(current_usdc_balance)/current_sol_price}SOL_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}")
                 test_values.performSwap(current_usdc_balance, transactions.usdc_mint, current_sol_price)
@@ -71,7 +71,7 @@ def determineTrade(pattern, ema5, ema20, adx, obv, fgi, current_sol_price):
 
     if ("_Bear" in pattern):
 
-        if ((obv < 0) or (adx >= 25) or (ema5 - ema20 < 0)):
+        if ((obv < 0) or (adx >= 25) or (ema5 < ema20 < ema50)):
             if (last_traded_coin == "sol"):
                 logging.info(f"BEARISH_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
                 test_values.performSwap(current_sol_balance, transactions.sol_mint, current_sol_price)
@@ -118,6 +118,7 @@ def performAnalysis():
     adx_df = talib.ADX(hi, lo, cl, timeperiod=12)
     ema5_df = talib.EMA(cl, timeperiod=5)
     ema20_df = talib.EMA(cl, timeperiod=20)
+    ema50_df = talib.EMA(cl, timeperiod=50)
     obv_df = talib.OBV(cl, vl)
 
     # Returns the daily crypto FGI
@@ -179,6 +180,6 @@ def performAnalysis():
 
     # Cleans up candlestick dataframe for viewing
     df.drop(candle_names + list(excluded_names), axis = 1, inplace = True)
-    determineTrade(df['candlestick_pattern'].iat[-1], ema5_df.iat[-1], ema20_df.iat[-1], adx_df.iat[-1], obv_df.iat[-1], fgi, cl.iat[-1])
+    determineTrade(df['candlestick_pattern'].iat[-1], ema5_df.iat[-1], ema20_df.iat[-1], ema50_df.iat[-1], adx_df.iat[-1], obv_df.iat[-1], fgi, cl.iat[-1])
 
 performAnalysis()
