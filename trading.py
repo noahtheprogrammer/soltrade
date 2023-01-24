@@ -15,7 +15,7 @@ import test_values
 logging.basicConfig(level=logging.INFO, filename='app.log', filemode='a', format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
 last_traded_sol_price = None
-last_traded_coin = "sol"
+last_traded_coin = "usdc"
 
 # This will eventually be filled with miscellaneous algorithms and other such information crucial to trading.
 def startTrading():
@@ -49,47 +49,31 @@ def determineTrade(pattern, ema5, ema20, ema50, adx, obv, fgi, current_sol_price
 
     global last_traded_coin
     global last_traded_sol_price
+ 
+    if (current_sol_price <= last_traded_sol_price * 0.9):
+        if (last_traded_coin == "sol"):
+            logging.info(f"STOPLOSS_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
+            test_values.performSwap(current_sol_balance, transactions.sol_mint, current_sol_price)
+            last_traded_sol_price = current_sol_price
+            last_traded_coin = "usdc"
 
-    if ("_Bull" in pattern):
-        if ((obv > 0) or (adx >= 25) or (ema5 > ema20)):
-            if (last_traded_coin == "usdc"):
-                logging.info(f"BULLISH_TRADE_{current_usdc_balance}USDC_TO_{(current_usdc_balance)/current_sol_price}SOL_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}")
+    if (ema5 > ema20) or ("_Bull" in pattern and (adx >= 25 or obv > 0)):
+        if (last_traded_coin == "usdc"):
+                logging.info(f"BULLISH_TRADE_{current_usdc_balance}USDC_TO_{(current_usdc_balance)/current_sol_price}SOL")
                 test_values.performSwap(current_usdc_balance, transactions.usdc_mint, current_sol_price)
                 last_traded_sol_price = current_sol_price
                 last_traded_coin = "sol"
-            else:
-                logging.info(f"BULLISH_HOLD_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
-
         else:
-            if ((last_traded_coin == "usdc")):
-                logging.info(f"BULLISH_BREAKOUT_TRADE_{current_usdc_balance}USDC_TO_{(current_usdc_balance)/current_sol_price}SOL_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}")
-                test_values.performSwap(current_usdc_balance, transactions.usdc_mint, current_sol_price)
-                last_traded_sol_price = current_sol_price
-                last_traded_coin = "sol"
-            else:
-                logging.info(f"BULLISH_BREAKOUT_HOLD_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
-
-    if ("_Bear" in pattern):
-
-        if ((obv < 0) or (adx >= 25) or (ema5 < ema20 < ema50)):
-            if (last_traded_coin == "sol"):
-                logging.info(f"BEARISH_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
-                test_values.performSwap(current_sol_balance, transactions.sol_mint, current_sol_price)
-                last_traded_sol_price = current_sol_price
-                last_traded_coin = "usdc"
-            else:
-                logging.info(f"BEARISH_HOLD_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
-
+            logging.info(f"BULLISH_HOLD_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
+    elif (ema5 < ema20 < ema50) or ("_Bear" in pattern and (adx >= 25 or obv < 0)):
+        if (last_traded_coin == "sol"):
+            logging.info(f"BEARISH_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
+            test_values.performSwap(current_sol_balance, transactions.sol_mint, current_sol_price)
+            last_traded_sol_price = current_sol_price
+            last_traded_coin = "usdc"
         else:
-            if ((last_traded_coin == "sol")):
-                logging.info(f"BEARISH_BREAKOUT_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
-                test_values.performSwap(current_sol_balance, transactions.sol_mint, current_sol_price)
-                last_traded_sol_price = current_sol_price
-                last_traded_coin = "usdc"
-            else:
-                logging.info(f"BEARISH_BREAKOUT_HOLD_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
-
-    if ("NO_PATTERN" in pattern):
+            logging.info(f"BEARISH_HOLD_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
+    else:
         logging.info(f"NO_TRADE_PERFORMED_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
 
 

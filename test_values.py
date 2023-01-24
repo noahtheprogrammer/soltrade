@@ -1,5 +1,5 @@
-sol_balance = 100
-usdc_balance = 0
+sol_balance = 0
+usdc_balance = 1000
 
 sol_mint = "So11111111111111111111111111111111111111112"
 usdc_mint = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
