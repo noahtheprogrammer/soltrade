@@ -50,12 +50,13 @@ def determineTrade(pattern, ema5, ema20, ema50, adx, obv, fgi, current_sol_price
     global last_traded_coin
     global last_traded_sol_price
  
-    if (current_sol_price <= last_traded_sol_price * 0.9):
-        if (last_traded_coin == "sol"):
-            logging.info(f"STOPLOSS_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
-            test_values.performSwap(current_sol_balance, transactions.sol_mint, current_sol_price)
-            last_traded_sol_price = current_sol_price
-            last_traded_coin = "usdc"
+    if (last_traded_sol_price != None):
+        if (current_sol_price <= last_traded_sol_price * 0.9):
+            if (last_traded_coin == "sol"):
+                logging.info(f"STOPLOSS_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
+                test_values.performSwap(current_sol_balance, transactions.sol_mint, current_sol_price)
+                last_traded_sol_price = current_sol_price
+                last_traded_coin = "usdc"
 
     if (ema5 > ema20) or ("_Bull" in pattern and (adx >= 25 or obv > 0)):
         if (last_traded_coin == "usdc"):
