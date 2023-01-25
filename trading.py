@@ -42,7 +42,7 @@ def fetchCandlestick():
     return(response.json())
 
 # Basic trading algorithm that determines what trade to perform with parameters
-def determineTrade(pattern, ema5, ema20, ema50, adx, obv, fgi, current_sol_price):
+def determineTrade(pattern, ema5, ema20, ema50, adx, obv, rsi, fgi, current_sol_price):
 
     current_sol_balance = test_values.sol_balance
     current_usdc_balance = test_values.usdc_balance
@@ -58,24 +58,26 @@ def determineTrade(pattern, ema5, ema20, ema50, adx, obv, fgi, current_sol_price
                 last_traded_sol_price = current_sol_price
                 last_traded_coin = "usdc"
 
-    if (ema5 > ema20) or ("_Bull" in pattern and (adx >= 25 or obv > 0)):
-        if (last_traded_coin == "usdc"):
-                logging.info(f"BULLISH_TRADE_{current_usdc_balance}USDC_TO_{(current_usdc_balance)/current_sol_price}SOL")
-                test_values.performSwap(current_usdc_balance, transactions.usdc_mint, current_sol_price)
+    if ("_Bull" in pattern and (adx >= 25 or obv > 0)):
+        if (ema5 > ema20 or rsi < 30):
+            if (last_traded_coin == "usdc"):
+                    logging.info(f"BULLISH_TRADE_{current_usdc_balance}USDC_TO_{(current_usdc_balance)/current_sol_price}SOL")
+                    test_values.performSwap(current_usdc_balance, transactions.usdc_mint, current_sol_price)
+                    last_traded_sol_price = current_sol_price
+                    last_traded_coin = "sol"
+            else:
+                logging.info(f"BULLISH_HOLD_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
+    elif ("_Bear" in pattern and (adx >= 25 or obv < 0)):
+        if (ema5 < ema20 < ema50 or rsi > 70):
+            if (last_traded_coin == "sol"):
+                logging.info(f"BEARISH_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
+                test_values.performSwap(current_sol_balance, transactions.sol_mint, current_sol_price)
                 last_traded_sol_price = current_sol_price
-                last_traded_coin = "sol"
-        else:
-            logging.info(f"BULLISH_HOLD_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
-    elif (ema5 < ema20 < ema50) or ("_Bear" in pattern and (adx >= 25 or obv < 0)):
-        if (last_traded_coin == "sol"):
-            logging.info(f"BEARISH_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
-            test_values.performSwap(current_sol_balance, transactions.sol_mint, current_sol_price)
-            last_traded_sol_price = current_sol_price
-            last_traded_coin = "usdc"
-        else:
-            logging.info(f"BEARISH_HOLD_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
+                last_traded_coin = "usdc"
+            else:
+                logging.info(f"BEARISH_HOLD_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
     else:
-        logging.info(f"NO_TRADE_PERFORMED_ADX{adx}_OBV{obv}_FGI{fgi}_PRICE{current_sol_price}_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
+        logging.info(f"NO_TRADE_PERFORMED_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
 
 
 # Analyzes the candlestick for most likely pattern
@@ -105,6 +107,7 @@ def performAnalysis():
     ema20_df = talib.EMA(cl, timeperiod=20)
     ema50_df = talib.EMA(cl, timeperiod=50)
     obv_df = talib.OBV(cl, vl)
+    rsi_df = talib.RSI(cl)
 
     # Returns the daily crypto FGI
     fgi = fear.findFGI()
@@ -165,6 +168,6 @@ def performAnalysis():
 
     # Cleans up candlestick dataframe for viewing
     df.drop(candle_names + list(excluded_names), axis = 1, inplace = True)
-    determineTrade(df['candlestick_pattern'].iat[-1], ema5_df.iat[-1], ema20_df.iat[-1], ema50_df.iat[-1], adx_df.iat[-1], obv_df.iat[-1], fgi, cl.iat[-1])
+    determineTrade(df['candlestick_pattern'].iat[-1], ema5_df.iat[-1], ema20_df.iat[-1], ema50_df.iat[-1], adx_df.iat[-1], obv_df.iat[-1], rsi_df.iat[-1], fgi, cl.iat[-1])
 
 performAnalysis()
