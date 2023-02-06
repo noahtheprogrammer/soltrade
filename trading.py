@@ -10,8 +10,6 @@ from recognition import fear
 from recognition import rankings
 from itertools import compress
 
-import test_values
-
 logging.basicConfig(level=logging.INFO, filename='app.log', filemode='a', format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
 last_traded_sol_price = None
@@ -42,7 +40,7 @@ def fetchCandlestick():
     return(response.json())
 
 # Basic trading algorithm that determines what trade to perform with parameters
-def determineTrade(pattern, ema5, ema20, ema50, adx, obv, rsi, fgi, current_sol_price):
+def determineTrade(pattern, ema5, ema20, ema50, adx, rsi, positive_di, negative_di, fgi, current_sol_price):
 
     current_sol_balance = test_values.sol_balance
     current_usdc_balance = test_values.usdc_balance
@@ -50,34 +48,29 @@ def determineTrade(pattern, ema5, ema20, ema50, adx, obv, rsi, fgi, current_sol_
     global last_traded_coin
     global last_traded_sol_price
  
-    if (last_traded_sol_price != None):
-        if (current_sol_price <= last_traded_sol_price * 0.9):
-            if (last_traded_coin == "sol"):
+    if last_traded_sol_price != None:
+        if current_sol_price <= last_traded_sol_price * 0.9:
+            if last_traded_coin == "sol":
                 logging.info(f"STOPLOSS_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
-                test_values.performSwap(current_sol_balance, transactions.sol_mint, current_sol_price)
                 last_traded_sol_price = current_sol_price
                 last_traded_coin = "usdc"
 
-    if ("_Bull" in pattern and (adx >= 25 or obv > 0)):
-        if (ema5 > ema20 or rsi < 30):
-            if (last_traded_coin == "usdc"):
-                    logging.info(f"BULLISH_TRADE_{current_usdc_balance}USDC_TO_{(current_usdc_balance)/current_sol_price}SOL")
-                    test_values.performSwap(current_usdc_balance, transactions.usdc_mint, current_sol_price)
-                    last_traded_sol_price = current_sol_price
-                    last_traded_coin = "sol"
-            else:
-                logging.info(f"BULLISH_HOLD_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
-    elif ("_Bear" in pattern and (adx >= 25 or obv < 0)):
-        if (ema5 < ema20 < ema50 or rsi > 70):
-            if (last_traded_coin == "sol"):
-                logging.info(f"BEARISH_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
-                test_values.performSwap(current_sol_balance, transactions.sol_mint, current_sol_price)
-                last_traded_sol_price = current_sol_price
-                last_traded_coin = "usdc"
-            else:
-                logging.info(f"BEARISH_HOLD_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
+    if ema5 > ema20 and adx >= 25 and rsi < 30 or positive_di > negative_di:
+        if last_traded_coin == "usdc":
+            logging.info(f"BULLISH_TRADE_{current_usdc_balance}USDC_TO_{(current_usdc_balance)/current_sol_price}SOL")
+            last_traded_sol_price = current_sol_price
+            last_traded_coin = "sol"
+        else:
+            logging.info(f"BULLISH_HOLD_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
+    elif ema5 < ema20 < ema50 and adx >= 25 and rsi > 70 or negative_di > positive_di:
+        if last_traded_coin == "sol":
+            logging.info(f"BEARISH_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
+            last_traded_sol_price = current_sol_price
+            last_traded_coin = "usdc"
+        else:
+            logging.info(f"BEARISH_HOLD_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")       
     else:
-        logging.info(f"NO_TRADE_PERFORMED_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
+        logging.info(f"NO_TRADE_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
 
 
 # Analyzes the candlestick for most likely pattern
@@ -106,8 +99,9 @@ def performAnalysis():
     ema5_df = talib.EMA(cl, timeperiod=5)
     ema20_df = talib.EMA(cl, timeperiod=20)
     ema50_df = talib.EMA(cl, timeperiod=50)
-    obv_df = talib.OBV(cl, vl)
     rsi_df = talib.RSI(cl)
+    pdi_df = talib.PLUS_DI(hi, lo, cl)
+    mdi_df = talib.MINUS_DI(hi, lo, cl)
 
     # Returns the daily crypto FGI
     fgi = fear.findFGI()
@@ -168,6 +162,6 @@ def performAnalysis():
 
     # Cleans up candlestick dataframe for viewing
     df.drop(candle_names + list(excluded_names), axis = 1, inplace = True)
-    determineTrade(df['candlestick_pattern'].iat[-1], ema5_df.iat[-1], ema20_df.iat[-1], ema50_df.iat[-1], adx_df.iat[-1], obv_df.iat[-1], rsi_df.iat[-1], fgi, cl.iat[-1])
+    determineTrade(df['candlestick_pattern'].iat[-1], ema5_df.iat[-1], ema20_df.iat[-1], ema50_df.iat[-1], adx_df.iat[-1], rsi_df.iat[-1], pdi_df.iat[-1], mdi_df.iat[-1], fgi, cl.iat[-1])
 
 performAnalysis()
