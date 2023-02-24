@@ -6,6 +6,7 @@ import logging
 import threading
 import talib
 import transactions
+import test_values
 from recognition import fear
 from recognition import rankings
 from itertools import compress
