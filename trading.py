@@ -1,26 +1,20 @@
 import json
 import requests
 import pandas as pd
-import numpy as np
 import logging
 import threading
 import talib
 import transactions
-import test_values
-from recognition import fear
-from recognition import rankings
-from itertools import compress
 
-logging.basicConfig(level=logging.INFO, filename='app.log', filemode='a', format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+# Values used to manage trading positions
+stoploss, takeprofit = 0
+position = False
 
-last_traded_sol_price = None
-last_traded_coin = "usdc"
-
-# This will eventually be filled with miscellaneous algorithms and other such information crucial to trading.
+# This will eventually be filled with miscellaneous algorithms and other such information crucial to trading
 def startTrading():
     print("Merx has now initialized trading.")
 
-# Imports the CryptoCompare API key
+# Imports the API key
 def importKey():
         with open('config.json', 'r') as openfile:
             key_object = json.load(openfile)
@@ -29,140 +23,62 @@ def importKey():
         return x
 
 # Initialize variable to store imported key
-api_key = importKey()
+key = importKey()
 
-# Fetches the OHLCV information in fifteen minute intervals
+# Pulls the candlestick information in fifteen minute intervals
 def fetchCandlestick():
 
     url = "https://min-api.cryptocompare.com/data/v2/histominute"
-    headers = {'authorization': api_key}
+    headers = {'authorization': key}
     params = {'fsym': 'SOL', 'tsym': 'USD', 'limit': 50, 'aggregate': 15}
     response = requests.get(url, headers=headers, params=params)
     return(response.json())
 
-# Basic trading algorithm that determines what trade to perform with parameters
-def determineTrade(pattern, ema5, ema20, ema50, adx, rsi, positive_di, negative_di, fgi, current_sol_price):
-
-    current_sol_balance = test_values.sol_balance
-    current_usdc_balance = test_values.usdc_balance
-
-    global last_traded_coin
-    global last_traded_sol_price
- 
-    if last_traded_sol_price != None:
-        if current_sol_price <= last_traded_sol_price * 0.9:
-            if last_traded_coin == "sol":
-                logging.info(f"STOPLOSS_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
-                last_traded_sol_price = current_sol_price
-                last_traded_coin = "usdc"
-
-    if ema5 > ema20 and adx >= 25 and rsi < 30 or positive_di > negative_di:
-        if last_traded_coin == "usdc":
-            logging.info(f"BULLISH_TRADE_{current_usdc_balance}USDC_TO_{(current_usdc_balance)/current_sol_price}SOL")
-            last_traded_sol_price = current_sol_price
-            last_traded_coin = "sol"
-        else:
-            logging.info(f"BULLISH_HOLD_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
-    elif ema5 < ema20 < ema50 and adx >= 25 and rsi > 70 or negative_di > positive_di:
-        if last_traded_coin == "sol":
-            logging.info(f"BEARISH_TRADE_{current_sol_balance}SOL_TO_{current_sol_balance * current_sol_price}USDC")
-            last_traded_sol_price = current_sol_price
-            last_traded_coin = "usdc"
-        else:
-            logging.info(f"BEARISH_HOLD_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")       
-    else:
-        logging.info(f"NO_TRADE_SOLBALANCE{current_sol_balance}_USDCBALANCE{current_usdc_balance}")
-
-
-# Analyzes the candlestick for most likely pattern
+# Analyzes the current market variables and determines trades
 def performAnalysis():
+    
+    global stoploss
+    global takeprofit
 
-    threading.Timer(900.0, performAnalysis).start()
-
-    # Converts fetchCandlestick() response for usage in DataFrame
+    # Converts JSON response for DataFrame manipulation
     candle_json = fetchCandlestick()
     candle_dict = candle_json["Data"]["Data"]
 
     # Creates DataFrame for manipulation
-    columns = ['close', 'high', 'low', 'open', 'time', 'volumefrom', 'volumeto']
+    columns = ['close', 'high', 'low', 'open', 'time', 'VF', 'VT']
     df = pd.DataFrame(candle_dict, columns=columns)
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
-    # OHLC variables for technical analysis
+    # DataFrame variables for TA-Lib manipulation
     op = df['open']
     hi = df['high']
     lo = df['low']
     cl = df['close']
-    vl = df['volumeto'] + df['volumefrom']
 
-    # DataFrames for technical analysis
-    adx_df = talib.ADX(hi, lo, cl, timeperiod=12)
-    ema5_df = talib.EMA(cl, timeperiod=5)
-    ema20_df = talib.EMA(cl, timeperiod=20)
-    ema50_df = talib.EMA(cl, timeperiod=50)
-    rsi_df = talib.RSI(cl)
-    pdi_df = talib.PLUS_DI(hi, lo, cl)
-    mdi_df = talib.MINUS_DI(hi, lo, cl)
-
-    # Returns the daily crypto FGI
-    fgi = fear.findFGI()
+    # Technical analysis values used in trading algorithm
+    ema_short = talib.EMA(cl, timeperiod=5).iat[-1]
+    ema_medium = talib.EMA(cl, timeperiod=20).iat[-1]
+    rsi = talib.RSI(cl).iat[-1]
+    upper_bb, middle_bb, lower_bb = talib.BBANDS(cl, nbdevup=2, nbdevdn=2, timeperiod=14).iat[-1]
+    close = cl.iat[-1]
     
-    # Gets candlestick pattern names for analzing
-    candle_names = talib.get_function_groups()['Pattern Recognition']
-
-    for candle in candle_names:
-        df[candle] = getattr(talib, candle)(op, hi, lo, cl)
-
-    # Patterns we have decided to exclude
-    excluded_names = ('CDLCOUNTERATTACK',
-                     'CDLLONGLINE',
-                     'CDLSHORTLINE',
-                     'CDLSTALLEDPATTERN',
-                     'CDLKICKINGBYLENGTH')
-
-    # Uses above variable to exclude specific patterns
-    candle_names = [candle for candle in candle_names if candle not in excluded_names]
-
-    df['candlestick_pattern'] = np.nan
-    df['candlestick_match_count'] = np.nan
-    for index, row in df.iterrows():
-
-        # Runs if no pattern is found
-        if len(row[candle_names]) - sum(row[candle_names] == 0) == 0:
-            df.loc[index,'candlestick_pattern'] = "NO_PATTERN"
-            df.loc[index, 'candlestick_match_count'] = 0
-
-        # Runs if a single pattern is found
-        elif len(row[candle_names]) - sum(row[candle_names] == 0) == 1:
-
-            if any(row[candle_names].values > 0):
-                pattern = list(compress(row[candle_names].keys(), row[candle_names].values != 0))[0] + '_Bull'
-                df.loc[index, 'candlestick_pattern'] = pattern
-                df.loc[index, 'candlestick_match_count'] = 1
-
-            else:
-                pattern = list(compress(row[candle_names].keys(), row[candle_names].values != 0))[0] + '_Bear'
-                df.loc[index, 'candlestick_pattern'] = pattern
-                df.loc[index, 'candlestick_match_count'] = 1
-
-        # Runs if multiple patterns are found and selects best performing
-        else:
-            patterns = list(compress(row[candle_names].keys(), row[candle_names].values != 0))
-            container = []
-            for pattern in patterns:
-                if row[pattern] > 0:
-                    container.append(pattern + '_Bull')
-                else:
-                    container.append(pattern + '_Bear')
-
-            rank_list = [rankings.candle_rankings[p] for p in container]
-            if len(rank_list) == len(container):
-                rank_index_best = rank_list.index(min(rank_list))
-                df.loc[index, 'candlestick_pattern'] = container[rank_index_best]
-                df.loc[index, 'candlestick_match_count'] = len(container)
-
-    # Cleans up candlestick dataframe for viewing
-    df.drop(candle_names + list(excluded_names), axis = 1, inplace = True)
-    determineTrade(df['candlestick_pattern'].iat[-1], ema5_df.iat[-1], ema20_df.iat[-1], ema50_df.iat[-1], adx_df.iat[-1], rsi_df.iat[-1], pdi_df.iat[-1], mdi_df.iat[-1], fgi, cl.iat[-1])
+    # 
+    if not position:
+        input_amound = round(current_sol_balance/close, 1) - 0.2
+        
+        if (ema_short > ema_medium or close < lower_bb) and rsi <= 30:
+            transactions.performSwap(input_amount, transactions.usdc_mint)
+            stoploss = close * 0.925
+            takeprofit = close * 1.25
+    else:
+        input_amount = round(current_usdc_balance*close, 1) - 0.2
+        
+        if close <= stoploss or close >= takeprofit:
+            transactions.performSwap(input_amount, transactions.sol_mint)
+            stoploss, takeprofit = 0
+            
+        if (ema_short < ema_medium or close > upper_bb) and rsi >= 70:
+            transactions.performSwap(input_amount, transactions.sol_mint)
+            stoploss, takeprofit = 0
 
 performAnalysis()
