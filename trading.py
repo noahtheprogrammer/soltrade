@@ -1,18 +1,19 @@
 import json
 import requests
 import pandas as pd
-import logging
-import threading
 import talib
 import transactions
+import wallet
+import threading
 
 # Values used to manage trading positions
-stoploss, takeprofit = 0
+stoploss = takeprofit = 0
 position = False
 
-# This will eventually be filled with miscellaneous algorithms and other such information crucial to trading
+# This starts the trading function on a timer
 def startTrading():
     print("Merx has now initialized trading.")
+    performAnalysis()
 
 # Imports the API key
 def importKey():
@@ -62,23 +63,23 @@ def performAnalysis():
     upper_bb, middle_bb, lower_bb = talib.BBANDS(cl, nbdevup=2, nbdevdn=2, timeperiod=14).iat[-1]
     close = cl.iat[-1]
     
-    # 
+
     if not position:
-        input_amound = round(current_sol_balance/close, 1) - 0.2
+        input_amount = round(wallet.findSolBalance() / close, 1) - 0.2
         
         if (ema_short > ema_medium or close < lower_bb) and rsi <= 30:
             transactions.performSwap(input_amount, transactions.usdc_mint)
             stoploss = close * 0.925
             takeprofit = close * 1.25
     else:
-        input_amount = round(current_usdc_balance*close, 1) - 0.2
+        input_amount = round(wallet.findUSDCBalance() * close, 1) - 0.2
         
         if close <= stoploss or close >= takeprofit:
             transactions.performSwap(input_amount, transactions.sol_mint)
-            stoploss, takeprofit = 0
+            stoploss = takeprofit = 0
             
         if (ema_short < ema_medium or close > upper_bb) and rsi >= 70:
             transactions.performSwap(input_amount, transactions.sol_mint)
-            stoploss, takeprofit = 0
+            stoploss = takeprofit = 0
 
 performAnalysis()
