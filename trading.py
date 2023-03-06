@@ -4,16 +4,12 @@ import pandas as pd
 import talib
 import transactions
 import wallet
-import threading
+from apscheduler.schedulers.background import BackgroundScheduler
+import keyboard
 
 # Values used to manage trading positions
 stoploss = takeprofit = 0
 position = False
-
-# This starts the trading function on a timer
-def startTrading():
-    print("Merx has now initialized trading.")
-    performAnalysis()
 
 # Imports the API key
 def importKey():
@@ -50,36 +46,51 @@ def performAnalysis():
     df = pd.DataFrame(candle_dict, columns=columns)
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
-    # DataFrame variables for TA-Lib manipulation
-    op = df['open']
-    hi = df['high']
-    lo = df['low']
+    # DataFrame variable for TA-Lib manipulation
     cl = df['close']
 
     # Technical analysis values used in trading algorithm
     ema_short = talib.EMA(cl, timeperiod=5).iat[-1]
     ema_medium = talib.EMA(cl, timeperiod=20).iat[-1]
     rsi = talib.RSI(cl).iat[-1]
-    upper_bb, middle_bb, lower_bb = talib.BBANDS(cl, nbdevup=2, nbdevdn=2, timeperiod=14).iat[-1]
-    close = cl.iat[-1]
-    
+    upper_bb, middle_bb, lower_bb = talib.BBANDS(cl, nbdevup=2, nbdevdn=2, timeperiod=14)
 
     if not position:
-        input_amount = round(wallet.findSolBalance() / close, 1) - 0.2
+        input_amount = round(wallet.findSolBalance() / cl.iat[-1], 1) - 0.2
         
-        if (ema_short > ema_medium or close < lower_bb) and rsi <= 30:
+        if (ema_short > ema_medium or cl.iat[-1] < lower_bb.iat[-1]) and rsi <= 30:
             transactions.performSwap(input_amount, transactions.usdc_mint)
-            stoploss = close * 0.925
-            takeprofit = close * 1.25
+            stoploss = cl.iat[-1] * 0.925
+            takeprofit = cl.iat[-1] * 1.25
     else:
-        input_amount = round(wallet.findUSDCBalance() * close, 1) - 0.2
+        input_amount = round(wallet.findUSDCBalance() * cl.iat[-1], 1) - 0.2
         
-        if close <= stoploss or close >= takeprofit:
+        if cl.iat[-1] <= stoploss or cl.iat[-1] >= takeprofit:
             transactions.performSwap(input_amount, transactions.sol_mint)
             stoploss = takeprofit = 0
             
-        if (ema_short < ema_medium or close > upper_bb) and rsi >= 70:
+        if (ema_short < ema_medium or cl.iat[-1] > upper_bb.iat[-1]) and rsi >= 70:
             transactions.performSwap(input_amount, transactions.sol_mint)
             stoploss = takeprofit = 0
 
-performAnalysis()
+# This starts the trading function on a timer
+def startTrading():
+    print("Merx has now initialized the trading algorithm.")
+
+    trading_sched = BackgroundScheduler()
+    trading_sched.add_job(performAnalysis, 'interval', minutes=15)
+    trading_sched.start()
+    performAnalysis()
+
+    while True:
+        if keyboard.is_pressed("q"):
+            print("Merx has now been shut down.")
+            exit()
+
+        if keyboard.is_pressed("p"):
+            trading_sched.pause()
+            print("Merx has now been paused.")
+
+        if keyboard.is_pressed("r"):
+            trading_sched.resume()
+            print("Merx has now been resumed.")
