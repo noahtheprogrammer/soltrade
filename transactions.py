@@ -85,7 +85,7 @@ async def performSwap(sent_amount, sent_token_mint):
         if setup_transaction:
             sendTransaction(setup_transaction, opts)
         
-        # This swaps the Solana or wSOL token from the setup transaction for the USDC token
+        # This swaps $SOL from the setup transaction for the $USDC
         if swap_transaction:
             
             # If an error is thrown because the transaction failed, retry the transaction one more time

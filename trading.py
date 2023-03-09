@@ -83,14 +83,19 @@ def startTrading():
     performAnalysis()
 
     while True:
-        if keyboard.is_pressed("q"):
-            print("Merx has now been shut down.")
-            exit()
+        event = keyboard.read_event()
+        if event.event_type == keyboard.KEY_DOWN:
+            if event.name == 'p':
+                keyboard.wait('p')
+                trading_sched.pause()
+                print("Merx has now been paused.")
 
-        if keyboard.is_pressed("p"):
-            trading_sched.pause()
-            print("Merx has now been paused.")
-
-        if keyboard.is_pressed("r"):
-            trading_sched.resume()
-            print("Merx has now been resumed.")
+            if event.name == 'r':
+                keyboard.wait('r')
+                trading_sched.resume()
+                print("Merx has now been resumed.")
+            
+            if event.name == 'q':
+                keyboard.wait('q')
+                print("Merx has now been shut down.")
+                exit()
