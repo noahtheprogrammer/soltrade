@@ -1,6 +1,9 @@
-import wallet
+import time
 import httpx
 import base64
+
+import wallet
+
 from solana.rpc.types import TxOpts
 from solana.transaction import Transaction
 
@@ -57,48 +60,42 @@ def sendTransaction(swap_transaction, opts):
 
 # Uses the previous functions and parameters to exchange Solana token currencies
 async def performSwap(sent_amount, sent_token_mint):
-
-    # Basic ticker symbol toggle for CLI interface
-    if (sent_token_mint == sol_mint):
-        sent_ticker_symbol = "$SOL"
-        received_ticker_symbol = "$USDC"
-    else:
-        sent_ticker_symbol = "$SOL"
-        received_ticker_symbol = "$USDC"
-
-    # Just a basic exception handler in some unforeseen situation
-    try:
-        print(f"Beginning trade from {sent_ticker_symbol} to {received_ticker_symbol}")
-
-        # Creates exchange and transaction values to be used in sendTransaction() calls
-        transaction_route = await createExchange(sent_amount, sent_token_mint)
-        quote = transaction_route["data"][0]
-        trans = await createTransaction(quote)
-
-        # Variables that store each of the transaction values and revert to None if it doesn't exist
-        setup_transaction = trans["setupTransaction"] if "setupTransaction" in trans else None
-        swap_transaction = trans["swapTransaction"] if "swapTransaction" in trans else None
-        cleanup_transaction = trans["cleanupTransaction"] if "cleanupTransaction" in trans else None
-        opts = TxOpts(skip_preflight=True)
-
-        # This sets up the swap transaction and starts by converting the inputed Solana amount into the wSOL equivalent
-        if setup_transaction:
-            sendTransaction(setup_transaction, opts)
         
-        # This swaps $SOL from the setup transaction for the $USDC
-        if swap_transaction:
+    # Retries three times in case an exception is thrown
+    tries = 3
+    for i in range(tries):
+        try:
+            # Creates token exchange and quote
+            transaction_route = await createExchange(sent_amount, sent_token_mint)
+            quote = transaction_route["data"][0]
+            trans = await createTransaction(quote)
+
+            # Variables storing necessary transaction values
+            setup_transaction = trans["setupTransaction"] if "setupTransaction" in trans else None
+            swap_transaction = trans["swapTransaction"] if "swapTransaction" in trans else None
+            cleanup_transaction = trans["cleanupTransaction"] if "cleanupTransaction" in trans else None
+            opts = TxOpts(skip_preflight=True)
             
-            # If an error is thrown because the transaction failed, retry the transaction one more time
-            try:
-                print("Sending swap transaction...")
+            # Sends setup transaction
+            if setup_transaction:
+                sendTransaction(setup_transaction, opts)
+
+            # Sends swap transaction
+            if swap_transaction:
                 sendTransaction(swap_transaction, opts)
-            except:
-                print("Retrying swap transaction...")
-                sendTransaction(swap_transaction, opts)
-        
-        # This sends the final transaction in order to complete the swap
-        if cleanup_transaction:
-            sendTransaction(cleanup_transaction, opts)
-        print(f"Successfully traded {sent_ticker_symbol} for {received_ticker_symbol}")
-    except:
-        print("Merx was unable to complete the coin exchange at the moment.")
+
+            # Sends cleanup transaction
+            if cleanup_transaction:
+                sendTransaction(cleanup_transaction, opts)
+            
+            if sent_token_mint == sol_mint:
+                print("Merx has successfully opened a position.")
+            else:
+                print("Merx has successfully closed a position.")
+        except:
+            if i < tries - 1:
+                time.sleep(60)
+                continue
+            else:
+                print("Merx was unable to take a position.")
+        break

@@ -4,6 +4,7 @@ import pandas as pd
 import talib
 import transactions
 import wallet
+import asyncio
 from apscheduler.schedulers.background import BackgroundScheduler
 import keyboard
 
@@ -59,18 +60,18 @@ def performAnalysis():
         input_amount = round(wallet.findSolBalance() / cl.iat[-1], 1) - 0.2
         
         if (ema_short > ema_medium or cl.iat[-1] < lower_bb.iat[-1]) and rsi <= 30:
-            transactions.performSwap(input_amount, transactions.usdc_mint)
+            asyncio.run(transactions.performSwap(input_amount, transactions.usdc_mint))
             stoploss = cl.iat[-1] * 0.925
             takeprofit = cl.iat[-1] * 1.25
     else:
         input_amount = round(wallet.findUSDCBalance() * cl.iat[-1], 1) - 0.2
         
         if cl.iat[-1] <= stoploss or cl.iat[-1] >= takeprofit:
-            transactions.performSwap(input_amount, transactions.sol_mint)
+            asyncio.run(transactions.performSwap(input_amount, transactions.sol_mint))
             stoploss = takeprofit = 0
             
         if (ema_short < ema_medium or cl.iat[-1] > upper_bb.iat[-1]) and rsi >= 70:
-            transactions.performSwap(input_amount, transactions.sol_mint)
+            asyncio.run(transactions.performSwap(input_amount, transactions.sol_mint))
             stoploss = takeprofit = 0
 
 # This starts the trading function on a timer
