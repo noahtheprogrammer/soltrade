@@ -25,7 +25,7 @@ class merxStrategy(bt.Strategy):
             if (self.ema_short < self.ema_medium or self.data.close > self.bb.lines.top) and self.rsi >= 70:
                 self.close()
 
-def formatData():
+def format_data():
 
     url = "https://api.binance.us/api/v3/klines"
     params = {'symbol': 'SOLUSDT', 'interval': '15m', 'limit': 1000}
@@ -43,7 +43,7 @@ def formatData():
     formatted_df = df.set_index('time')
     return formatted_df
 
-data = bt.feeds.PandasData(dataname=formatData())
+data = bt.feeds.PandasData(dataname=format_data())
 
 cerebro = bt.Cerebro()
 cerebro.addstrategy(merxStrategy)

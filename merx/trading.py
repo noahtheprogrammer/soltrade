@@ -1,19 +1,22 @@
 import json
 import requests
+import asyncio
+
 import pandas as pd
 import talib
-import transactions
-import wallet
-import asyncio
-from apscheduler.schedulers.background import BackgroundScheduler
+
 import keyboard
+from apscheduler.schedulers.background import BackgroundScheduler
+
+from wallet import *
+from transactions import *
 
 # Values used to manage trading positions
 stoploss = takeprofit = 0
 position = False
 
 # Imports the API key
-def importKey():
+def import_key():
         with open('config.json', 'r') as openfile:
             key_object = json.load(openfile)
             x = key_object["api_key"]
@@ -21,10 +24,10 @@ def importKey():
         return x
 
 # Initialize variable to store imported key
-key = importKey()
+key = import_key()
 
 # Pulls the candlestick information in fifteen minute intervals
-def fetchCandlestick():
+def fetch_candlestick():
 
     url = "https://min-api.cryptocompare.com/data/v2/histominute"
     headers = {'authorization': key}
@@ -33,13 +36,13 @@ def fetchCandlestick():
     return(response.json())
 
 # Analyzes the current market variables and determines trades
-def performAnalysis():
+def perform_analysis():
     
     global stoploss
     global takeprofit
 
     # Converts JSON response for DataFrame manipulation
-    candle_json = fetchCandlestick()
+    candle_json = fetch_candlestick()
     candle_dict = candle_json["Data"]["Data"]
 
     # Creates DataFrame for manipulation
@@ -57,31 +60,31 @@ def performAnalysis():
     upper_bb, middle_bb, lower_bb = talib.BBANDS(cl, nbdevup=2, nbdevdn=2, timeperiod=14)
 
     if not position:
-        input_amount = round(wallet.findSolBalance() / cl.iat[-1], 1) - 0.2
+        input_amount = round(find_sol_balance() / cl.iat[-1], 1) - 0.2
         
         if (ema_short > ema_medium or cl.iat[-1] < lower_bb.iat[-1]) and rsi <= 30:
-            asyncio.run(transactions.performSwap(input_amount, transactions.usdc_mint))
+            asyncio.run(perform_swap(input_amount, usdc_mint))
             stoploss = cl.iat[-1] * 0.925
             takeprofit = cl.iat[-1] * 1.25
     else:
-        input_amount = round(wallet.findUSDCBalance() * cl.iat[-1], 1) - 0.2
+        input_amount = round(find_usdc_balance() * cl.iat[-1], 1) - 0.2
         
         if cl.iat[-1] <= stoploss or cl.iat[-1] >= takeprofit:
-            asyncio.run(transactions.performSwap(input_amount, transactions.sol_mint))
+            asyncio.run(perform_swap(input_amount, sol_mint))
             stoploss = takeprofit = 0
             
         if (ema_short < ema_medium or cl.iat[-1] > upper_bb.iat[-1]) and rsi >= 70:
-            asyncio.run(transactions.performSwap(input_amount, transactions.sol_mint))
+            asyncio.run(perform_swap(input_amount, sol_mint))
             stoploss = takeprofit = 0
 
 # This starts the trading function on a timer
-def startTrading():
+def start_trading():
     print("Merx has now initialized the trading algorithm.")
 
     trading_sched = BackgroundScheduler()
-    trading_sched.add_job(performAnalysis, 'interval', minutes=15)
+    trading_sched.add_job(perform_analysis, 'interval', minutes=15)
     trading_sched.start()
-    performAnalysis()
+    perform_analysis()
 
     while True:
         event = keyboard.read_event()

@@ -1,12 +1,12 @@
+import os.path
+
+import json
+
+import base58
 from solana.keypair import Keypair
 from solana.rpc.api import Client
 from solana.rpc.types import TokenAccountOpts
 from solana.publickey import PublicKey
-import base58
-import os
-import os.path
-import json
-import requests
 
 # This class holds colors used for error and success messages
 class colors:
@@ -31,7 +31,7 @@ keypair_seed = None
 wallet_address = None
 
 # Checks to determine whether the file exists
-def checkJSONState():
+def check_json_state():
     if (os.path.exists("config.json")):
 
         # Parses the file and assigns the private and public key
@@ -58,20 +58,13 @@ def checkJSONState():
         return False
 
 # Returns the current balance of Solana in the wallet
-def findSolBalance():
+def find_sol_balance():
     balance_response = client.get_balance(wallet_address).value
     balance_response = balance_response / (10**9)
     return(balance_response)
 
 # Returns the current balance of the USDC token in the wallet
-def findUSDCBalance():
+def find_usdc_balance():
     response = client.get_token_accounts_by_owner_json_parsed(wallet_address, TokenAccountOpts(mint = PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"))).to_json()
     json_response = json.loads(response)
     return(json_response["result"]["value"][0]["account"]["data"]["parsed"]["info"]["tokenAmount"]["uiAmount"])
-
-# Returns the current price of Solana using a GET request
-def findPrice():
-    price_api = 'https://api.coinbase.com/v2/prices/SOL-USD/buy'
-    response = requests.get(price_api)
-    json_response = response.json()
-    return(json_response["data"]["amount"])
