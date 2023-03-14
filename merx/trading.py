@@ -3,13 +3,13 @@ import requests
 import asyncio
 
 import pandas as pd
-import talib
 
 import keyboard
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from wallet import *
 from transactions import *
+from indicators import *
 
 # Values used to manage trading positions
 stoploss = takeprofit = 0
@@ -54,10 +54,10 @@ def perform_analysis():
     cl = df['close']
 
     # Technical analysis values used in trading algorithm
-    ema_short = talib.EMA(cl, timeperiod=5).iat[-1]
-    ema_medium = talib.EMA(cl, timeperiod=20).iat[-1]
-    rsi = talib.RSI(cl).iat[-1]
-    upper_bb, middle_bb, lower_bb = talib.BBANDS(cl, nbdevup=2, nbdevdn=2, timeperiod=14)
+    ema_short = calculate_ema(dataframe=df, length=5)
+    ema_medium = calculate_ema(dataframe=df, length=20)
+    rsi = calculate_rsi(dataframe=df, length=14)
+    upper_bb, lower_bb = calculate_bbands(dataframe=df, length=14)
 
     if not position:
         input_amount = round(find_sol_balance() / cl.iat[-1], 1) - 0.2
