@@ -7,6 +7,8 @@ from solana.rpc.types import TxOpts
 from solana.transaction import Transaction
 from wallet import *
 
+from text import colors
+
 # Mint variables for ease of access
 sol_mint = "So11111111111111111111111111111111111111112"
 usdc_mint = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
@@ -37,7 +39,7 @@ async def create_transaction(route):
     # Parameters used for the Jupiter POST request
     parameters = {
         "route": route,
-        "userPublicKey": str(wallet_address),
+        "userPublicKey": public_address,
         "wrapUnwrapSOL": False,
         "feeAccount": "6VEv1cnWVBVrPQt9D8zeGS9RzBp9cdF91uiH6mex5ka2"
     }
@@ -56,6 +58,7 @@ def send_transaction(swap_transaction, opts):
     # Sends and returns the transaction status
     result = client.send_transaction(transaction, keypair, opts=opts)
     txid = result.value
+    print(txid)
     return(txid)
 
 # Uses the previous functions and parameters to exchange Solana token currencies
@@ -89,13 +92,13 @@ async def perform_swap(sent_amount, sent_token_mint):
                 send_transaction(cleanup_transaction, opts)
             
             if sent_token_mint == sol_mint:
-                print("Merx has successfully opened a position.")
+                print(colors.OKGREEN + "Merx has successfully opened a market position." + colors.ENDC)
             else:
-                print("Merx has successfully closed a position.")
+                print(colors.OKGREEN + "Merx has successfully closed a market position." + colors.ENDC)
         except:
             if i < tries - 1:
                 time.sleep(60)
                 continue
             else:
-                print("Merx was unable to take a position.")
+                print(colors.FAIL + "Merx was unable to take a market position." + colors.ENDC)
         break
