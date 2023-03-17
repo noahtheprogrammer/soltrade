@@ -39,9 +39,9 @@ async def create_transaction(route):
     # Parameters used for the Jupiter POST request
     parameters = {
         "route": route,
-        "userPublicKey": public_address,
+        "userPublicKey": str(public_address),
         "wrapUnwrapSOL": False,
-        "feeAccount": "6VEv1cnWVBVrPQt9D8zeGS9RzBp9cdF91uiH6mex5ka2"
+        "feeAccount": "6XeQkUDZdsGsKBrhGWRuweHu4nbcv23t8r8vPt5xEsMv"
     }
 
     # Returns the JSON parsed response of Jupiter
