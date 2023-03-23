@@ -103,5 +103,3 @@ def start_trading():
                 keyboard.wait('q')
                 print("Merx has now been shut down.")
                 exit()
-
-asyncio.run(perform_swap(1, sol_mint))

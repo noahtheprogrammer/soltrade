@@ -40,7 +40,7 @@ async def create_transaction(route):
     parameters = {
         "route": route,
         "userPublicKey": str(public_address),
-        "wrapUnwrapSOL": False,
+        "wrapUnwrapSOL": True,
         "feeAccount": "6XeQkUDZdsGsKBrhGWRuweHu4nbcv23t8r8vPt5xEsMv"
     }
 
@@ -58,7 +58,7 @@ def send_transaction(swap_transaction, opts):
     # Sends and returns the transaction status
     result = client.send_transaction(transaction, keypair, opts=opts)
     txid = result.value
-    print(txid)
+    print(colors.HEADER + f"Merx TxID: {txid}" + colors.ENDC)
     return(txid)
 
 # Uses the previous functions and parameters to exchange Solana token currencies
