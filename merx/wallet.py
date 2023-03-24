@@ -7,7 +7,7 @@ from solana.rpc.api import Client
 from solana.rpc.types import TokenAccountOpts
 from solana.publickey import PublicKey
 
-from text import colors
+from merx.text import colors
 
 # Mainnet client for network interaction
 client = Client("https://api.mainnet-beta.solana.com/")

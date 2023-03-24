@@ -7,9 +7,10 @@ import pandas as pd
 import keyboard
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from wallet import *
-from transactions import *
-from indicators import *
+from merx.wallet import *
+from merx.transactions import *
+from merx.indicators import *
+from merx.text import colors, timestamp
 
 # Values used to manage trading positions
 stoploss = takeprofit = 0
@@ -79,7 +80,7 @@ def perform_analysis():
 
 # This starts the trading function on a timer
 def start_trading():
-    print("Merx has now initialized the trading algorithm.")
+    print(colors.OKGREEN + timestamp.TIME + ": Merx has now initialized the trading algorithm." + colors.ENDC)
 
     trading_sched = BackgroundScheduler()
     trading_sched.add_job(perform_analysis, 'interval', minutes=15)

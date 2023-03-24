@@ -5,9 +5,9 @@ import httpx
 import base64
 from solana.rpc.types import TxOpts
 from solana.transaction import Transaction
-from wallet import *
+from merx.wallet import *
 
-from text import colors
+from merx.text import colors, timestamp
 
 # Mint variables for ease of access
 sol_mint = "So11111111111111111111111111111111111111112"
@@ -58,7 +58,7 @@ def send_transaction(swap_transaction, opts):
     # Sends and returns the transaction status
     result = client.send_transaction(transaction, keypair, opts=opts)
     txid = result.value
-    print(colors.HEADER + f"Merx TxID: {txid}" + colors.ENDC)
+    print(colors.HEADER + timestamp.TIME + f": Merx TxID: {txid}" + colors.ENDC)
     return(txid)
 
 # Uses the previous functions and parameters to exchange Solana token currencies
@@ -92,13 +92,13 @@ async def perform_swap(sent_amount, sent_token_mint):
                 send_transaction(cleanup_transaction, opts)
             
             if sent_token_mint == sol_mint:
-                print(colors.OKGREEN + "Merx has successfully opened a market position." + colors.ENDC)
+                print(colors.OKGREEN + timestamp.TIME + ": Merx has successfully opened a market position." + colors.ENDC)
             else:
-                print(colors.OKGREEN + "Merx has successfully closed a market position." + colors.ENDC)
+                print(colors.OKGREEN + timestamp.TIME + ": Merx has successfully closed a market position." + colors.ENDC)
         except:
             if i < tries - 1:
                 time.sleep(60)
                 continue
             else:
-                print(colors.FAIL + "Merx was unable to take a market position." + colors.ENDC)
+                print(colors.FAIL + timestamp.TIME + ": Merx was unable to take a market position." + colors.ENDC)
         break
