@@ -18,6 +18,7 @@ except:
 
 # Checks if the run prompt should be displayed
 if (can_run):
+    print(timestamp.find_time() + ": Merx has successfully imported the API requirements.")
     start_trading()
 else:
     exit()
