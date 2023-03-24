@@ -4,7 +4,6 @@ import asyncio
 
 import pandas as pd
 
-import keyboard
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from merx.wallet import *
@@ -81,6 +80,7 @@ def perform_analysis():
 # This starts the trading function on a timer
 def start_trading():
     print(colors.OKGREEN + timestamp.find_time() + ": Merx has now initialized the trading algorithm." + colors.ENDC)
+    print(colors.OKBLUE + timestamp.find_time() + ": Press P to pause, R to resume, and Q to quit the program." + colors.ENDC)
 
     trading_sched = BackgroundScheduler()
     trading_sched.add_job(perform_analysis, 'interval', minutes=15)
@@ -88,19 +88,15 @@ def start_trading():
     perform_analysis()
 
     while True:
-        event = keyboard.read_event()
-        if event.event_type == keyboard.KEY_DOWN:
-            if event.name == 'p':
-                keyboard.wait('p')
-                trading_sched.pause()
-                print("Merx has now been paused.")
+        event = input().lower()
+        if event == 'p':
+            trading_sched.pause()
+            print("Merx has now been paused.")
 
-            if event.name == 'r':
-                keyboard.wait('r')
-                trading_sched.resume()
-                print("Merx has now been resumed.")
+        if event == 'r':
+            trading_sched.resume()
+            print("Merx has now been resumed.")
             
-            if event.name == 'q':
-                keyboard.wait('q')
-                print("Merx has now been shut down.")
-                exit()
+        if event == 'q':
+            print("Merx has now been shut down.")
+            exit()

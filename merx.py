@@ -6,7 +6,8 @@ from merx.text import colors, timestamp
 print(""" ________   ___ ______  __
 |  _   _ \ / _ \  __\ \/ /
 | | | | | |  __/ |   >  < 
-|_| |_| |_|\___|_|  /_/\_\ """)
+|_| |_| |_|\___|_|  /_/\_\ 
+""")
 can_run = check_json_state()
 
 # Error catching in case the program is unable to find the properties of the wallet
