@@ -7,7 +7,7 @@ from solana.rpc.api import Client
 from solana.rpc.types import TokenAccountOpts
 from solana.publickey import PublicKey
 
-from merx.text import colors
+from merx.text import colors, timestamp
 
 # Mainnet client for network interaction
 client = Client("https://api.mainnet-beta.solana.com/")
@@ -24,10 +24,10 @@ def check_json_state():
                 openfile.close
                 return keypair
             except:
-                print(colors.FAIL + "Merx was unable to parse the JSON file. Are you sure config.json is formatted properly?" + colors.ENDC)
+                print(colors.FAIL + timestamp.find_time() + "Merx was unable to parse the JSON file. Are you sure config.json is formatted properly?" + colors.ENDC)
                 return None
     else:
-        print(colors.FAIL + "Merx was unable to detect the JSON file. Are you sure config.json has not been renamed or removed?" + colors.ENDC)
+        print(colors.FAIL + timestamp.find_time() + "Merx was unable to detect the JSON file. Are you sure config.json has not been renamed or removed?" + colors.ENDC)
         return False
     
 keypair = check_json_state()

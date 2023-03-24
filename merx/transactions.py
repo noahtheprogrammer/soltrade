@@ -58,7 +58,7 @@ def send_transaction(swap_transaction, opts):
     # Sends and returns the transaction status
     result = client.send_transaction(transaction, keypair, opts=opts)
     txid = result.value
-    print(colors.HEADER + timestamp.TIME + f": Merx TxID: {txid}" + colors.ENDC)
+    print(colors.HEADER + timestamp.find_time() + f": Merx TxID: {txid}" + colors.ENDC)
     return(txid)
 
 # Uses the previous functions and parameters to exchange Solana token currencies
@@ -92,13 +92,13 @@ async def perform_swap(sent_amount, sent_token_mint):
                 send_transaction(cleanup_transaction, opts)
             
             if sent_token_mint == sol_mint:
-                print(colors.OKGREEN + timestamp.TIME + ": Merx has successfully opened a market position." + colors.ENDC)
+                print(colors.OKGREEN + timestamp.find_time() + ": Merx has successfully opened a market position." + colors.ENDC)
             else:
-                print(colors.OKGREEN + timestamp.TIME + ": Merx has successfully closed a market position." + colors.ENDC)
+                print(colors.OKGREEN + timestamp.find_time() + ": Merx has successfully closed a market position." + colors.ENDC)
         except:
             if i < tries - 1:
                 time.sleep(60)
                 continue
             else:
-                print(colors.FAIL + timestamp.TIME + ": Merx was unable to take a market position." + colors.ENDC)
+                print(colors.FAIL + timestamp.find_time() + ": Merx was unable to take a market position." + colors.ENDC)
         break

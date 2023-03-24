@@ -15,4 +15,5 @@ class colors:
     ENDC = '\033[0m'
 
 class timestamp:
-    TIME = '{:%Y-%b-%d %H:%M:%S}'.format(datetime.datetime.now())
+    def find_time():
+        return '{:%Y-%b-%d %H:%M:%S}'.format(datetime.datetime.now())
