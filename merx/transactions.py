@@ -91,7 +91,7 @@ async def perform_swap(sent_amount, sent_token_mint):
             if cleanup_transaction:
                 send_transaction(cleanup_transaction, opts)
             
-            if sent_token_mint == sol_mint:
+            if sent_token_mint == usdc_mint:
                 print(colors.OKGREEN + timestamp.find_time() + ": Merx has successfully opened a market position." + colors.ENDC)
             else:
                 print(colors.OKGREEN + timestamp.find_time() + ": Merx has successfully closed a market position." + colors.ENDC)

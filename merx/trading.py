@@ -62,7 +62,7 @@ def perform_analysis():
     if not position:
         input_amount = round(find_sol_balance() / cl.iat[-1], 1) - 0.2
         
-        if (ema_short > ema_medium or cl.iat[-1] < lower_bb.iat[-1]) and rsi <= 30:
+        if (ema_short > ema_medium or cl.iat[-1] < lower_bb.iat[-1]) and rsi <= 31:
             asyncio.run(perform_swap(input_amount, usdc_mint))
             stoploss = cl.iat[-1] * 0.925
             takeprofit = cl.iat[-1] * 1.25
@@ -73,7 +73,7 @@ def perform_analysis():
             asyncio.run(perform_swap(input_amount, sol_mint))
             stoploss = takeprofit = 0
             
-        if (ema_short < ema_medium or cl.iat[-1] > upper_bb.iat[-1]) and rsi >= 70:
+        if (ema_short < ema_medium or cl.iat[-1] > upper_bb.iat[-1]) and rsi >= 68:
             asyncio.run(perform_swap(input_amount, sol_mint))
             stoploss = takeprofit = 0
 
