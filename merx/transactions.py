@@ -9,9 +9,12 @@ from merx.wallet import *
 
 from merx.text import colors, timestamp
 
-# Mint variables for ease of access
+# Public mint address values
 sol_mint = "So11111111111111111111111111111111111111112"
 usdc_mint = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+
+# Position held in market
+position = False
 
 # Returns the route to be manipulated in createTransaction()
 async def create_exchange(input_amount, input_token_mint):
@@ -93,8 +96,10 @@ async def perform_swap(sent_amount, sent_token_mint):
             
             if sent_token_mint == usdc_mint:
                 print(colors.OKGREEN + timestamp.find_time() + ": Merx has successfully opened a market position." + colors.ENDC)
+                position = True
             else:
                 print(colors.OKGREEN + timestamp.find_time() + ": Merx has successfully closed a market position." + colors.ENDC)
+                position = False
         except:
             if i < tries - 1:
                 time.sleep(60)

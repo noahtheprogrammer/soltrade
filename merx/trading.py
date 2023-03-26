@@ -13,7 +13,6 @@ from merx.text import colors, timestamp
 
 # Values used to manage trading positions
 stoploss = takeprofit = 0
-position = False
 
 # Imports the API key
 def import_key():
@@ -72,6 +71,7 @@ def perform_analysis():
         if cl.iat[-1] <= stoploss or cl.iat[-1] >= takeprofit:
             asyncio.run(perform_swap(input_amount, sol_mint))
             stoploss = takeprofit = 0
+            return
             
         if (ema_short < ema_medium or cl.iat[-1] > upper_bb.iat[-1]) and rsi >= 68:
             asyncio.run(perform_swap(input_amount, sol_mint))
