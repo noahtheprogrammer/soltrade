@@ -1,5 +1,5 @@
 <div align="center">
-  <img src=https://user-images.githubusercontent.com/81941019/227662986-b9a1bfcb-c150-41a3-aec3-13e97e9f6eee.png alt="merx_logo">
+  <img src=https://user-images.githubusercontent.com/81941019/228043179-454302f4-fdaf-4715-92a3-f19a4c2e7ccc.png alt="merx_logo">
   <img src=https://img.shields.io/github/downloads/noahtheprogrammer/merxbot/total?style=for-the-badge alt="download_count">
   <img src=https://img.shields.io/github/contributors/noahtheprogrammer/merxbot?style=for-the-badge alt="contributor_count">
   <img src=https://img.shields.io/github/issues-raw/noahtheprogrammer/merxbot?style=for-the-badge alt="issue_count">
