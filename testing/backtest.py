@@ -5,10 +5,10 @@ import backtrader as bt
 
 class merxStrategy(bt.Strategy):
     def __init__(self):
-        self.rsi = bt.indicators.RSI(self.data.close, period=14)
+        self.rsi = bt.ind.RSI(self.data.close, period=14)
         self.bb = bt.ind.BollingerBands(self.data.close, period=14)
-        self.ema_short = bt.talib.EMA(self.data.close, timeperiod=5)
-        self.ema_medium = bt.talib.EMA(self.data.close, timeperiod=20)
+        self.ema_short = bt.ind.ExponentialMovingAverage(self.data.close, period=5)
+        self.ema_medium = bt.ind.ExponentialMovingAverage(self.data.close, period=20)
         self.stoploss = 0
         self.takeprofit = 0
 
