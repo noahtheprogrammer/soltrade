@@ -30,7 +30,7 @@ def fetch_candlestick():
 
     url = "https://min-api.cryptocompare.com/data/v2/histominute"
     headers = {'authorization': key}
-    params = {'fsym': 'SOL', 'tsym': 'USD', 'limit': 50, 'aggregate': 15}
+    params = {'fsym': 'SOL', 'tsym': 'USD', 'limit': 50, 'aggregate': 5}
     response = requests.get(url, headers=headers, params=params)
     return(response.json())
 
@@ -59,6 +59,7 @@ def perform_analysis():
     upper_bb, lower_bb = calculate_bbands(dataframe=df, length=14)
 
     if not position:
+        print(timestamp.find_time() + ": Scouting for optimal open positions.")
         input_amount = round(find_sol_balance() / cl.iat[-1], 1) - 0.2
         
         if (ema_short > ema_medium or cl.iat[-1] < lower_bb.iat[-1]) and rsi <= 31:
@@ -66,8 +67,9 @@ def perform_analysis():
             stoploss = cl.iat[-1] * 0.925
             takeprofit = cl.iat[-1] * 1.25
     else:
+        print(timestamp.find_time() + ": Scouting for optimal closing positions.")
         input_amount = round(find_usdc_balance() * cl.iat[-1], 1) - 0.2
-        
+
         if cl.iat[-1] <= stoploss or cl.iat[-1] >= takeprofit:
             asyncio.run(perform_swap(input_amount, sol_mint))
             stoploss = takeprofit = 0
@@ -80,23 +82,23 @@ def perform_analysis():
 # This starts the trading function on a timer
 def start_trading():
     print(colors.OKGREEN + timestamp.find_time() + ": Merx has now initialized the trading algorithm." + colors.ENDC)
-    print(colors.OKBLUE + timestamp.find_time() + ": Press P to pause, R to resume, and Q to quit the program." + colors.ENDC)
+    print(colors.OKBLUE + timestamp.find_time() + ": Available commands are /pause, /resume, and /quit." + colors.ENDC)
 
     trading_sched = BackgroundScheduler()
-    trading_sched.add_job(perform_analysis, 'interval', minutes=15)
+    trading_sched.add_job(perform_analysis, 'interval', minutes=5)
     trading_sched.start()
     perform_analysis()
 
     while True:
         event = input().lower()
-        if event == 'p':
+        if event == '/pause':
             trading_sched.pause()
             print("Merx has now been paused.")
 
-        if event == 'r':
+        if event == '/resume':
             trading_sched.resume()
             print("Merx has now been resumed.")
             
-        if event == 'q':
+        if event == '/quit':
             print("Merx has now been shut down.")
             exit()

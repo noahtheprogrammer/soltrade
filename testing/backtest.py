@@ -28,7 +28,7 @@ class merxStrategy(bt.Strategy):
 def format_data():
 
     url = "https://api.binance.us/api/v3/klines"
-    params = {'symbol': 'SOLUSDT', 'interval': '15m', 'limit': 1000}
+    params = {'symbol': 'SOLUSDT', 'interval': '5m', 'limit': 1000}
     response = requests.get(url, params=params)
     candle_dict = response.json()
 
