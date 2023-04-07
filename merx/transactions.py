@@ -66,6 +66,8 @@ def send_transaction(swap_transaction, opts):
 
 # Uses the previous functions and parameters to exchange Solana token currencies
 async def perform_swap(sent_amount, sent_token_mint):
+
+    global position
         
     # Retries three times in case an exception is thrown
     tries = 3
