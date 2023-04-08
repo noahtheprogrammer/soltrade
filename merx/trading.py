@@ -11,8 +11,16 @@ from merx.transactions import *
 from merx.indicators import *
 from merx.text import colors, timestamp
 
-# Values used to manage trading positions
+# SL/TP and indicator values for usage
 stoploss = takeprofit = 0
+ema_short = 0
+ema_medium = 0
+rsi = 0
+upper_bb = 0
+lower_bb = 0
+
+# Initial and current portfolio values for viewing $USDC net profit
+initial = current = find_usdc_balance()
 
 # Imports the API key
 def import_key():
@@ -39,6 +47,10 @@ def perform_analysis():
     
     global stoploss
     global takeprofit
+    global ema_short, ema_medium
+    global rsi
+    global upper_bb, lower_bb
+    global current
 
     # Converts JSON response for DataFrame manipulation
     candle_json = fetch_candlestick()
@@ -78,11 +90,13 @@ def perform_analysis():
         if (ema_short < ema_medium or cl.iat[-1] > upper_bb.iat[-1]) and rsi >= 68:
             asyncio.run(perform_swap(input_amount, sol_mint))
             stoploss = takeprofit = 0
+    
+    current = round(find_sol_balance() * cl.iat[-1] + find_usdc_balance(), 2)
 
 # This starts the trading function on a timer
 def start_trading():
     print(colors.OKGREEN + timestamp.find_time() + ": Merx has now initialized the trading algorithm." + colors.ENDC)
-    print(colors.OKBLUE + timestamp.find_time() + ": Available commands are /pause, /resume, and /quit." + colors.ENDC)
+    print(colors.OKBLUE + timestamp.find_time() + ": Available commands are /statistics, /pause, /resume, and /quit." + colors.ENDC)
 
     trading_sched = BackgroundScheduler()
     trading_sched.add_job(perform_analysis, 'interval', minutes=5)
@@ -98,6 +112,23 @@ def start_trading():
         if event == '/resume':
             trading_sched.resume()
             print("Merx has now been resumed.")
+
+        if event == '/statistics':
+            net_profit = round(initial - current, 2)
+            if net_profit < 0:
+                net_profit = colors.FAIL + "$" + str(net_profit) + " ▼" + colors.ENDC
+            else:
+                net_profit = colors.OKGREEN + "$" + str(net_profit) + " ▲" + colors.ENDC
+
+            print(f"""
+            net_profit      {net_profit}
+            total_trades    {trades}
+            ema_short       {ema_short}
+            ema_medium      {ema_medium}
+            rsi             {rsi}
+            upper_bb        {upper_bb.iat[-1]}
+            lower_bb        {lower_bb.iat[-1]}
+            """)
             
         if event == '/quit':
             print("Merx has now been shut down.")

@@ -13,8 +13,9 @@ from merx.text import colors, timestamp
 sol_mint = "So11111111111111111111111111111111111111112"
 usdc_mint = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 
-# Position held in market
+# Position and trades in market
 position = False
+trades = 0
 
 # Returns the route to be manipulated in createTransaction()
 async def create_exchange(input_amount, input_token_mint):
@@ -99,9 +100,11 @@ async def perform_swap(sent_amount, sent_token_mint):
             if sent_token_mint == usdc_mint:
                 print(colors.OKGREEN + timestamp.find_time() + ": Merx has successfully opened a market position." + colors.ENDC)
                 position = True
+                trades = trades + 1
             else:
                 print(colors.OKGREEN + timestamp.find_time() + ": Merx has successfully closed a market position." + colors.ENDC)
                 position = False
+                trades = trades + 1
         except:
             if i < tries - 1:
                 time.sleep(60)
