@@ -73,6 +73,7 @@ def perform_analysis():
     if not position:
         print(timestamp.find_time() + ": Scouting for optimal open positions.")
         input_amount = round(find_sol_balance() / cl.iat[-1], 1) - 0.2
+        current = round(find_usdc_balance(), 2)
         
         if (ema_short > ema_medium or cl.iat[-1] < lower_bb.iat[-1]) and rsi <= 31:
             asyncio.run(perform_swap(input_amount, usdc_mint))
@@ -81,6 +82,7 @@ def perform_analysis():
     else:
         print(timestamp.find_time() + ": Scouting for optimal closing positions.")
         input_amount = round(find_usdc_balance() * cl.iat[-1], 1) - 0.2
+        current = round(find_sol_balance() * cl.iat[-1], 2)
 
         if cl.iat[-1] <= stoploss or cl.iat[-1] >= takeprofit:
             asyncio.run(perform_swap(input_amount, sol_mint))
@@ -90,8 +92,6 @@ def perform_analysis():
         if (ema_short < ema_medium or cl.iat[-1] > upper_bb.iat[-1]) and rsi >= 68:
             asyncio.run(perform_swap(input_amount, sol_mint))
             stoploss = takeprofit = 0
-    
-    current = round(find_sol_balance() * cl.iat[-1] + find_usdc_balance(), 2)
 
 # This starts the trading function on a timer
 def start_trading():
@@ -121,13 +121,13 @@ def start_trading():
                 net_profit = colors.OKGREEN + "$" + str(net_profit) + " ▲" + colors.ENDC
 
             print(f"""
-            net_profit      {net_profit}
-            total_trades    {trades}
-            ema_short       {ema_short}
-            ema_medium      {ema_medium}
-            rsi             {rsi}
-            upper_bb        {upper_bb.iat[-1]}
-            lower_bb        {lower_bb.iat[-1]}
+    Net Profit                          {net_profit}
+    Total Trades                        {trades}
+    Short EMA                           {ema_short}
+    Medium EMA                          {ema_medium}
+    Relative Strength Index             {rsi}
+    Upper Bollinger Band                {upper_bb.iat[-1]}
+    Lower Bollinger Band                {lower_bb.iat[-1]}
             """)
             
         if event == '/quit':
