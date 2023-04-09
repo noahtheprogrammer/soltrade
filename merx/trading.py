@@ -72,8 +72,7 @@ def perform_analysis():
 
     if not position:
         print(timestamp.find_time() + ": Scouting for optimal open positions.")
-        input_amount = round(find_sol_balance() / cl.iat[-1], 1) - 0.2
-        current = round(find_usdc_balance(), 2)
+        input_amount = round(find_usdc_balance(), 1) - 0.2
         
         if (ema_short > ema_medium or cl.iat[-1] < lower_bb.iat[-1]) and rsi <= 31:
             asyncio.run(perform_swap(input_amount, usdc_mint))
@@ -81,8 +80,7 @@ def perform_analysis():
             takeprofit = cl.iat[-1] * 1.25
     else:
         print(timestamp.find_time() + ": Scouting for optimal closing positions.")
-        input_amount = round(find_usdc_balance() * cl.iat[-1], 1) - 0.2
-        current = round(find_sol_balance() * cl.iat[-1], 2)
+        input_amount = round(find_sol_balance(), 1) - 0.2
 
         if cl.iat[-1] <= stoploss or cl.iat[-1] >= takeprofit:
             asyncio.run(perform_swap(input_amount, sol_mint))
