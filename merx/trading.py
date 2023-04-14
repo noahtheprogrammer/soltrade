@@ -94,7 +94,7 @@ def perform_analysis():
 # This starts the trading function on a timer
 def start_trading():
     print(colors.OKGREEN + timestamp.find_time() + ": Merx has now initialized the trading algorithm." + colors.ENDC)
-    print(colors.OKBLUE + timestamp.find_time() + ": Available commands are /statistics, /pause, /resume, and /quit." + colors.ENDC)
+    print(colors.HEADER + timestamp.find_time() + ": Available commands are /statistics, /pause, /resume, and /quit." + colors.ENDC)
 
     trading_sched = BackgroundScheduler()
     trading_sched.add_job(perform_analysis, 'interval', minutes=5)
