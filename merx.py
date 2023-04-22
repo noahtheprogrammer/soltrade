@@ -17,8 +17,6 @@ except:
     print(colors.WARNING + timestamp.find_time() + ": Merx was unable to find $USDC tokens available for trading at this time." + colors.ENDC)
     exit()
 
-asyncio.run(perform_swap(1, usdc_mint))
-
 # Checks if the run prompt should be displayed
 if (can_run):
     print(timestamp.find_time() + ": Merx has successfully imported the API requirements.")
