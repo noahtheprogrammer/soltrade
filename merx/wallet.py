@@ -2,10 +2,10 @@ import os.path
 import json
 
 import base58
-from solana.keypair import Keypair
+from solders.keypair import Keypair
+from solders.pubkey import Pubkey
 from solana.rpc.api import Client
 from solana.rpc.types import TokenAccountOpts
-from solana.publickey import PublicKey
 
 from merx.text import colors, timestamp
 
@@ -20,7 +20,7 @@ def check_json_state():
                 key_object = json.load(openfile)
                 keypair_seed = key_object["private_key"]
                 key_object["api_key"]
-                keypair = Keypair.from_secret_key(base58.b58decode(keypair_seed))
+                keypair = Keypair.from_bytes(base58.b58decode(keypair_seed))
                 openfile.close
                 return keypair
             except:
@@ -31,7 +31,7 @@ def check_json_state():
         return False
     
 keypair = check_json_state()
-public_address = keypair.public_key
+public_address = keypair.pubkey()
 
 # Returns the current balance of $SOL in the wallet
 def find_sol_balance():
@@ -41,6 +41,6 @@ def find_sol_balance():
 
 # Returns the current balance of $USDC in the wallet
 def find_usdc_balance():
-    response = client.get_token_accounts_by_owner_json_parsed(public_address, TokenAccountOpts(mint = PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"))).to_json()
+    response = client.get_token_accounts_by_owner_json_parsed(public_address, TokenAccountOpts(mint = Pubkey.from_string("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"))).to_json()
     json_response = json.loads(response)
     return(json_response["result"]["value"][0]["account"]["data"]["parsed"]["info"]["tokenAmount"]["uiAmount"])

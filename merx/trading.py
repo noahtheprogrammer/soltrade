@@ -11,16 +11,11 @@ from merx.transactions import *
 from merx.indicators import *
 from merx.text import colors, timestamp
 
-# SL/TP and indicator values for usage
+# Stoploss and trading values for statistics and algorithm
 stoploss = takeprofit = 0
-ema_short = 0
-ema_medium = 0
+ema_short = ema_medium = 0
+upper_bb = lower_bb = 0
 rsi = 0
-upper_bb = 0
-lower_bb = 0
-
-# Initial and current portfolio values for viewing $USDC net profit
-initial = current = find_usdc_balance()
 
 # Imports the API key
 def import_key():
@@ -50,7 +45,6 @@ def perform_analysis():
     global ema_short, ema_medium
     global rsi
     global upper_bb, lower_bb
-    global current
 
     # Converts JSON response for DataFrame manipulation
     candle_json = fetch_candlestick()
@@ -71,7 +65,6 @@ def perform_analysis():
     upper_bb, lower_bb = calculate_bbands(dataframe=df, length=14)
 
     if not position:
-        print(timestamp.find_time() + ": Scouting for optimal open positions.")
         input_amount = round(find_usdc_balance(), 1) - 0.2
         
         if (ema_short > ema_medium or cl.iat[-1] < lower_bb.iat[-1]) and rsi <= 31:
@@ -79,7 +72,6 @@ def perform_analysis():
             stoploss = cl.iat[-1] * 0.925
             takeprofit = cl.iat[-1] * 1.25
     else:
-        print(timestamp.find_time() + ": Scouting for optimal closing positions.")
         input_amount = round(find_sol_balance(), 1) - 0.2
 
         if cl.iat[-1] <= stoploss or cl.iat[-1] >= takeprofit:
@@ -94,7 +86,7 @@ def perform_analysis():
 # This starts the trading function on a timer
 def start_trading():
     print(colors.OKGREEN + timestamp.find_time() + ": Merx has now initialized the trading algorithm." + colors.ENDC)
-    print(colors.HEADER + timestamp.find_time() + ": Available commands are /statistics, /pause, /resume, and /quit." + colors.ENDC)
+    print(timestamp.find_time() + ": Available commands are /statistics, /pause, /resume, and /quit.")
 
     trading_sched = BackgroundScheduler()
     trading_sched.add_job(perform_analysis, 'interval', minutes=5)
@@ -110,17 +102,8 @@ def start_trading():
         if event == '/resume':
             trading_sched.resume()
             print("Merx has now been resumed.")
-
         if event == '/statistics':
-            net_profit = round(initial - current, 2)
-            if net_profit < 0:
-                net_profit = colors.FAIL + "$" + str(net_profit) + " ▼" + colors.ENDC
-            else:
-                net_profit = colors.OKGREEN + "$" + str(net_profit) + " ▲" + colors.ENDC
-
             print(f"""
-    Net Profit                          {net_profit}
-    Total Trades                        {trades}
     Short EMA                           {ema_short}
     Medium EMA                          {ema_medium}
     Relative Strength Index             {rsi}

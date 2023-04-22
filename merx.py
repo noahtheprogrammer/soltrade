@@ -12,10 +12,12 @@ can_run = check_json_state()
 
 # Error catching in case the program is unable to find the properties of the wallet
 try:
-    print(timestamp.find_time() + f": Merx has detected {initial} $USDC tokens available for trading.")
+    print(timestamp.find_time() + f": Merx has detected {find_usdc_balance()} $USDC tokens available for trading.")
 except:
     print(colors.WARNING + timestamp.find_time() + ": Merx was unable to find $USDC tokens available for trading at this time." + colors.ENDC)
     exit()
+
+asyncio.run(perform_swap(1, usdc_mint))
 
 # Checks if the run prompt should be displayed
 if (can_run):

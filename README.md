@@ -43,8 +43,8 @@ Then, use the designated inputs to pause, resume, or quit the program.
 if you have any interest in contributing, fork the repository and submit a pull request to have your improvements merged into the main repository. When opening an issue or feature request, be sure to provide a clear title and description of the issue you are experiencing or the feature you would like to suggest. Once submitted, I will review the issue and respond as soon as possible.
 
 ### Donations
-Merx takes a 0.5% platform fee off of each transaction.
-If you're feeling a bit more generous however, feel free to donate to my address below.
+Merx does not include a platform fee and will remain free forever.
+If you're feeling a bit more generous however, please donate to my $SOL address below.
 ```
 6XeQkUDZdsGsKBrhGWRuweHu4nbcv23t8r8vPt5xEsMv
 ```

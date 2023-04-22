@@ -4,4 +4,4 @@ base58==2.1.1
 httpx==0.23.3
 pandas==1.5.3
 requests==2.28.2
-solana==0.28.0
+solana==0.29.0
