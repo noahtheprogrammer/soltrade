@@ -1,9 +1,9 @@
 <div align="center">
   <img src=https://user-images.githubusercontent.com/81941019/228043179-454302f4-fdaf-4715-92a3-f19a4c2e7ccc.png alt="merx_logo">
-  <img src=https://img.shields.io/github/downloads/noahtheprogrammer/merxbot/total?style=for-the-badge alt="download_count">
-  <img src=https://img.shields.io/github/contributors/noahtheprogrammer/merxbot?style=for-the-badge alt="contributor_count">
-  <img src=https://img.shields.io/github/issues-raw/noahtheprogrammer/merxbot?style=for-the-badge alt="issue_count">
-  <img src=https://img.shields.io/github/repo-size/noahtheprogrammer/merxbot?style=for-the-badge alt="repo_size">
+  <img src=https://img.shields.io/github/downloads/noahtheprogrammer/merx/total?style=for-the-badge alt="download_count">
+  <img src=https://img.shields.io/github/contributors/noahtheprogrammer/merx?style=for-the-badge alt="contributor_count">
+  <img src=https://img.shields.io/github/issues-raw/noahtheprogrammer/merx?style=for-the-badge alt="issue_count">
+  <img src=https://img.shields.io/github/repo-size/noahtheprogrammer/merx?style=for-the-badge alt="repo_size">
 </div>
 
 ### Introduction
