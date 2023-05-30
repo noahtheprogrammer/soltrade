@@ -4,9 +4,9 @@ import base64
 from solana.rpc.types import TxOpts
 from solders.transaction import VersionedTransaction
 from solders import message
-from merx.wallet import *
+from soltrade.wallet import *
 
-from merx.text import colors, timestamp
+from soltrade.text import colors, timestamp
 
 # Public mint address values
 sol_mint = "So11111111111111111111111111111111111111112"
@@ -60,7 +60,7 @@ def send_transaction(swap_transaction, opts):
     result = client.send_raw_transaction(bytes(signed_txn), opts)
     txid = result.value
 
-    print(colors.HEADER + timestamp.find_time() + f": Merx TxID: {txid}" + colors.ENDC)
+    print(colors.HEADER + timestamp.find_time() + f": Soltrade TxID: {txid}" + colors.ENDC)
     return(txid)
 
 # Uses the previous functions and parameters to exchange Solana token currencies
@@ -78,11 +78,11 @@ async def perform_swap(sent_amount, sent_token_mint):
         send_transaction(trans["swapTransaction"], opts)
                 
         if sent_token_mint == usdc_mint:
-            print(colors.OKGREEN + timestamp.find_time() + ": Merx has successfully opened a market position." + colors.ENDC)
+            print(colors.OKGREEN + timestamp.find_time() + ": Soltrade has successfully opened a market position." + colors.ENDC)
             position = True
         else:
-            print(colors.OKGREEN + timestamp.find_time() + ": Merx has successfully closed a market position." + colors.ENDC)
+            print(colors.OKGREEN + timestamp.find_time() + ": Soltrade has successfully closed a market position." + colors.ENDC)
             position = False
     except Exception as e:
-        print(colors.FAIL + timestamp.find_time() + ": Merx was unable to take a market position." + colors.ENDC)
-        print(colors.FAIL + timestamp.find_time() + f": MerxException: {e}" + colors.ENDC)
+        print(colors.FAIL + timestamp.find_time() + ": Soltrade was unable to take a market position." + colors.ENDC)
+        print(colors.FAIL + timestamp.find_time() + f": SoltradeException: {e}" + colors.ENDC)

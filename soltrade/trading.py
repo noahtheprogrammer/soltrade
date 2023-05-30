@@ -6,10 +6,10 @@ import pandas as pd
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from merx.wallet import *
-from merx.transactions import *
-from merx.indicators import *
-from merx.text import colors, timestamp
+from soltrade.wallet import *
+from soltrade.transactions import *
+from soltrade.indicators import *
+from soltrade.text import colors, timestamp
 
 # Stoploss and trading values for statistics and algorithm
 stoploss = takeprofit = 0
@@ -85,7 +85,7 @@ def perform_analysis():
 
 # This starts the trading function on a timer
 def start_trading():
-    print(colors.OKGREEN + timestamp.find_time() + ": Merx has now initialized the trading algorithm." + colors.ENDC)
+    print(colors.OKGREEN + timestamp.find_time() + ": Soltrade has now initialized the trading algorithm." + colors.ENDC)
     print(timestamp.find_time() + ": Available commands are /statistics, /pause, /resume, and /quit.")
 
     trading_sched = BackgroundScheduler()
@@ -97,11 +97,11 @@ def start_trading():
         event = input().lower()
         if event == '/pause':
             trading_sched.pause()
-            print("Merx has now been paused.")
+            print("Soltrade has now been paused.")
 
         if event == '/resume':
             trading_sched.resume()
-            print("Merx has now been resumed.")
+            print("Soltrade has now been resumed.")
         if event == '/statistics':
             print(f"""
     Short EMA                           {ema_short}
@@ -112,5 +112,5 @@ def start_trading():
             """)
             
         if event == '/quit':
-            print("Merx has now been shut down.")
+            print("Soltrade has now been shut down.")
             exit()

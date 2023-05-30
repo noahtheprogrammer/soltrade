@@ -3,7 +3,7 @@ import pandas as pd
 
 import backtrader as bt
 
-class merxStrategy(bt.Strategy):
+class SoltradeStrategy(bt.Strategy):
     def __init__(self):
         self.rsi = bt.ind.RSI(self.data.close, period=14)
         self.bb = bt.ind.BollingerBands(self.data.close, period=14)
@@ -46,7 +46,7 @@ def format_data():
 data = bt.feeds.PandasData(dataname=format_data())
 
 cerebro = bt.Cerebro()
-cerebro.addstrategy(merxStrategy)
+cerebro.addstrategy(SoltradeStrategy)
 cerebro.adddata(data)
 cerebro.run()
 cerebro.plot()
