@@ -1,9 +1,5 @@
 <div align="center">
   <img src=https://github.com/noahtheprogrammer/soltrade/assets/81941019/aee060e2-d254-447e-b2ec-746367e06483 alt="soltrade_logo">
-  <img src=https://img.shields.io/github/downloads/noahtheprogrammer/soltrade/total?style=for-the-badge alt="download_count">
-  <img src=https://img.shields.io/github/contributors/noahtheprogrammer/soltrade?style=for-the-badge alt="contributor_count">
-  <img src=https://img.shields.io/github/issues-raw/noahtheprogrammer/soltrade?style=for-the-badge alt="issue_count">
-  <img src=https://img.shields.io/github/repo-size/noahtheprogrammer/soltrade?style=for-the-badge alt="repo_size">
 </div>
 
 ### Introduction
