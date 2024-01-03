@@ -3,6 +3,7 @@ import pandas as pd
 
 import backtrader as bt
 
+
 class SoltradeStrategy(bt.Strategy):
     def __init__(self):
         self.rsi = bt.ind.RSI(self.data.close, period=14)
@@ -25,8 +26,8 @@ class SoltradeStrategy(bt.Strategy):
             if (self.ema_short < self.ema_medium or self.data.close > self.bb.lines.top) and self.rsi >= 68:
                 self.close()
 
-def format_data():
 
+def format_data():
     url = "https://api.binance.us/api/v3/klines"
     params = {'symbol': 'SOLUSDT', 'interval': '5m', 'limit': 1000}
     response = requests.get(url, params=params)
@@ -42,6 +43,7 @@ def format_data():
     df['volume'] = pd.to_numeric(df['volume'])
     formatted_df = df.set_index('time')
     return formatted_df
+
 
 data = bt.feeds.PandasData(dataname=format_data())
 

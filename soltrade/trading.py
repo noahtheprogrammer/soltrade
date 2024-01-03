@@ -1,49 +1,43 @@
-import json
 import requests
 import asyncio
-
 import pandas as pd
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from soltrade.wallet import *
-from soltrade.transactions import *
-from soltrade.indicators import *
-from soltrade.text import colors, timestamp
+from soltrade.transactions import perform_swap, position
+from soltrade.indicators import calculate_ema, calculate_rsi, calculate_bbands
+from soltrade.utils import timestamp
+from soltrade.wallet import find_balance
+from soltrade.log import log_general, log_transaction
+from soltrade.config import config
+
 
 # Stoploss and trading values for statistics and algorithm
 stoploss = takeprofit = 0
 ema_short = ema_medium = 0
 upper_bb = lower_bb = 0
 rsi = 0
+price = 0
 
-# Imports the API key
-def import_key():
-        with open('config.json', 'r') as openfile:
-            key_object = json.load(openfile)
-            x = key_object["api_key"]
-            openfile.close
-        return x
-
-# Initialize variable to store imported key
-key = import_key()
 
 # Pulls the candlestick information in fifteen minute intervals
 def fetch_candlestick():
-
     url = "https://min-api.cryptocompare.com/data/v2/histominute"
-    headers = {'authorization': key}
-    params = {'fsym': 'SOL', 'tsym': 'USD', 'limit': 50, 'aggregate': 5}
+    headers = {'authorization': config().api_key}
+    params = {'fsym': config().other_mint_symbol, 'tsym': 'USD', 'limit': 50, 'aggregate': 5}
     response = requests.get(url, headers=headers, params=params)
-    return(response.json())
+    return response.json()
+
 
 # Analyzes the current market variables and determines trades
 def perform_analysis():
-    
+    log_general.debug(timestamp() + ": Soltrade is analyzing the market.")
+
     global stoploss
     global takeprofit
     global ema_short, ema_medium
     global rsi
+    global price
     global upper_bb, lower_bb
 
     # Converts JSON response for DataFrame manipulation
@@ -59,37 +53,52 @@ def perform_analysis():
     cl = df['close']
 
     # Technical analysis values used in trading algorithm
+    price = cl.iat[-1]
     ema_short = calculate_ema(dataframe=df, length=5)
     ema_medium = calculate_ema(dataframe=df, length=20)
     rsi = calculate_rsi(dataframe=df, length=14)
     upper_bb, lower_bb = calculate_bbands(dataframe=df, length=14)
 
+    log_general.info(get_statistics())
+
     if not position:
-        input_amount = round(find_usdc_balance(), 1) - 0.2
+        input_amount = round(find_balance(config().usdc_mint), 1) - 2
         
-        if (ema_short > ema_medium or cl.iat[-1] < lower_bb.iat[-1]) and rsi <= 31:
-            asyncio.run(perform_swap(input_amount, usdc_mint))
+        if (ema_short > ema_medium or price < lower_bb.iat[-1]) and rsi <= 31:
+            log_general.info(timestamp() + ": Soltrade has detected a buy signal.")
+            log_transaction.info(timestamp() + ": Soltrade has detected a buy signal.")
+            log_transaction.info(get_statistics())
+            asyncio.run(perform_swap(input_amount, config().usdc_mint))
             stoploss = cl.iat[-1] * 0.925
             takeprofit = cl.iat[-1] * 1.25
     else:
-        input_amount = round(find_sol_balance(), 1) - 0.2
+        input_amount = round(find_balance(config().other_mint), 1) - 0.2
 
-        if cl.iat[-1] <= stoploss or cl.iat[-1] >= takeprofit:
-            asyncio.run(perform_swap(input_amount, sol_mint))
+        if price <= stoploss or price >= takeprofit:
+            message = timestamp() + ": Soltrade has detected a sell signal. Stoploss or takeprofit has been reached."
+            log_general.info(message)
+            log_transaction.info(message)
+            log_transaction.info(get_statistics())
+            asyncio.run(perform_swap(input_amount, config().other_mint_symbol))
             stoploss = takeprofit = 0
             return
-            
-        if (ema_short < ema_medium or cl.iat[-1] > upper_bb.iat[-1]) and rsi >= 68:
-            asyncio.run(perform_swap(input_amount, sol_mint))
+
+        if (ema_short < ema_medium or price > upper_bb.iat[-1]) and rsi >= 68:
+            message = timestamp() + ": Soltrade has detected a sell signal. EMA or BB has been reached."
+            log_general.info(message)
+            log_transaction.info(message)
+            log_transaction.info(get_statistics())
+            asyncio.run(perform_swap(input_amount, config().other_mint_symbol))
             stoploss = takeprofit = 0
+
 
 # This starts the trading function on a timer
 def start_trading():
-    print(colors.OKGREEN + timestamp.find_time() + ": Soltrade has now initialized the trading algorithm." + colors.ENDC)
-    print(timestamp.find_time() + ": Available commands are /statistics, /pause, /resume, and /quit.")
+    log_general.info(timestamp() + ": Soltrade has now initialized the trading algorithm.")
+    log_general.debug(": Available commands are /statistics, /pause, /resume, and /quit.")
 
     trading_sched = BackgroundScheduler()
-    trading_sched.add_job(perform_analysis, 'interval', minutes=5)
+    trading_sched.add_job(perform_analysis, 'interval', seconds=config().trading_interval_seconds, max_instances=1)
     trading_sched.start()
     perform_analysis()
 
@@ -97,20 +106,28 @@ def start_trading():
         event = input().lower()
         if event == '/pause':
             trading_sched.pause()
-            print("Soltrade has now been paused.")
+            log_general.info("Soltrade has now been paused.")
 
         if event == '/resume':
             trading_sched.resume()
-            print("Soltrade has now been resumed.")
+            log_general.info("Soltrade has now been resumed.")
         if event == '/statistics':
-            print(f"""
-    Short EMA                           {ema_short}
-    Medium EMA                          {ema_medium}
-    Relative Strength Index             {rsi}
-    Upper Bollinger Band                {upper_bb.iat[-1]}
-    Lower Bollinger Band                {lower_bb.iat[-1]}
-            """)
-            
+            print_statistics()
+
         if event == '/quit':
-            print("Soltrade has now been shut down.")
+            log_general.info("Soltrade has now been shut down.")
             exit()
+
+
+def get_statistics():
+    return f"""
+        Short EMA                           {ema_short}
+        Medium EMA                          {ema_medium}
+        Relative Strength Index             {rsi}
+        Price                               {price}
+        Upper Bollinger Band                {upper_bb.iat[-1]}
+        Lower Bollinger Band                {lower_bb.iat[-1]}"""
+
+
+def print_statistics():
+    log_general.debug(get_statistics())
