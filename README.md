@@ -19,8 +19,13 @@ In order to use Soltrade you will need a free CryptoCompare API key and access t
 Open the installation folder and create a file titled `config.json` with the following code block, replacing the placeholder values with your API key and wallet private key. Both keys are required to receive pricing data and perform trading transactions.
 ```
 {
-  "api_key": "yourapikeyhere",
-  "private_key": "yourprivatekeyhere"
+  "api_key": "<CryptoCompare API key>",
+  "private_key": "<wallet_private_key>",
+  "custom_rpc_https": "",
+  "other_mint": "",
+  "other_mint_decimals": "",
+  "other_mint_symbol": "",
+  "trading_interval_seconds": ""
 }
 ```
 Next, install the dependencies for Soltrade by opening Python and running the following command.
@@ -29,6 +34,12 @@ This will install automatically install the required modules and their respectiv
 python -m pip install -r requirements.txt
 ```
 If the Soltrade is unable to open after following the installation process, try restarting your machine, as Python occassionally requires a reboot in order to successfully import modules.
+
+Alternatively, you can install using poetry:
+```
+python -m pip install poetry
+poetry install
+```
 
 ### Usage
 Make sure you have deposited at least 1 $USDC in your connected wallet for Soltrade to begin trading, along with 0.1 $SOL to pay for gas.

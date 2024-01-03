@@ -19,39 +19,38 @@ async def create_exchange(input_amount, input_token_mint):
     log_transaction.info(f"Creating exchange for {input_amount} {input_token_mint}")
 
     # Determines what mint address should be used in the api link
-    if input_token_mint == config().other_mint:
-        output_token_mint = config().usdc_mint
-        token_decimals = 10**9  # USDC decimals
+    if input_token_mint == config().usdc_mint:
+        output_token_mint = config().other_mint
+        token_decimals = 10**6  # USDC decimals
     else:
-        output_token_mint = config(). other_mint
+        output_token_mint = config().usdc_mint
         token_decimals = config().other_mint_decimals
     
     # Finds the response and converts it into a readable array
-    api_link = f"https://quote-api.jup.ag/v4/quote?inputMint={input_token_mint}&outputMint={output_token_mint}&amount={int(input_amount * token_decimals)}&slippageBps=50"
+    api_link = f"https://quote-api.jup.ag/v6/quote?inputMint={input_token_mint}&outputMint={output_token_mint}&amount={int(input_amount * token_decimals)}&slippageBps={config().slippage}"
     async with httpx.AsyncClient() as client:
         response = await client.get(api_link)
         return response.json()
 
 
 # Returns the swap_transaction to be manipulated in sendTransaction()
-async def create_transaction(route):
-    log_transaction.info(f"Creating transaction for {route}")
+async def create_transaction(quote):
+    log_transaction.info(f"Creating transaction for {quote}")
 
     # Parameters used for the Jupiter POST request
     parameters = {
-        "route": route,
+        "quoteResponse": quote,
         "userPublicKey": str(config().public_address),
         "wrapUnwrapSOL": True
     }
 
     # Returns the JSON parsed response of Jupiter
     async with httpx.AsyncClient() as client:
-        response = await client.post("https://quote-api.jup.ag/v4/swap", json=parameters)
+        response = await client.post("https://quote-api.jup.ag/v6/swap", json=parameters)
         return response.json()
 
 
 # Deserializes and sends the transaction from the swap information given
-@handle_rate_limiting
 def send_transaction(swap_transaction, opts):
     raw_txn = VersionedTransaction.from_bytes(base64.b64decode(swap_transaction))
     signature = config().keypair.sign_message(message.to_bytes_versioned(raw_txn.message))
@@ -68,20 +67,22 @@ async def perform_swap(sent_amount, sent_token_mint):
     global position
     log_general.info(timestamp() + ": Soltrade is taking a market position.")
     try:
-        # Creates token exchange and quote
-        txn_route = await create_exchange(sent_amount, sent_token_mint)
-        quote = txn_route["data"][0]
+        quote = await create_exchange(sent_amount, sent_token_mint)
         trans = await create_transaction(quote)
 
         opts = TxOpts(skip_preflight=True, max_retries=3)
-        send_transaction(trans["swapTransaction"], opts)
-                
+        txid = send_transaction(trans["swapTransaction"], opts)
+
         if sent_token_mint == config().usdc_mint:
-            log_transaction.info(f"Sold {sent_amount} USDC for {quote['outputAmount']} {config().other_mint}")
-            position = True
+            other_mint_decimals = config().other_mint_decimals
+            bought_amount = int(quote['outAmount']) / other_mint_decimals
+            log_transaction.info(f"Sold {sent_amount} USDC for {bought_amount:.6f} {config().other_mint_symbol}")
         else:
-            log_transaction.info(f"Sold {sent_amount} {config().other_mint} for {quote['outputAmount']} USDC")
-            position = False
+            usdc_decimals = 10**6  # Assuming USDC has 6 decimal places
+            bought_amount = int(quote['outAmount']) / usdc_decimals
+            log_transaction.info(f"Sold {sent_amount} {config().other_mint_symbol} for {bought_amount:.2f} USDC")
+
+        position = sent_token_mint != config().usdc_mint
     except Exception as e:
         log_transaction.error(timestamp() + ": Soltrade was unable to take a market position.")
         log_transaction.error(timestamp() + f": SoltradeException: {e}")
