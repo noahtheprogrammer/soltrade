@@ -62,7 +62,7 @@ def perform_analysis():
     log_general.info(get_statistics())
 
     if not position:
-        input_amount = round(find_balance(config().usdc_mint), 1) - 2
+        input_amount = round(find_balance(config().usdc_mint), 1) - 0.2  # TODO: make this configurable
         
         if (ema_short > ema_medium or price < lower_bb.iat[-1]) and rsi <= 31:
             log_general.info(timestamp() + ": Soltrade has detected a buy signal.")
