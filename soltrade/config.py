@@ -18,6 +18,7 @@ class Config:
         self.other_mint_decimals = None
         self.other_mint_symbol = None
         self.trading_interval_seconds = None
+        self.slippage = None  # bps
         self.load_config()
 
     def load_config(self):
@@ -33,9 +34,10 @@ class Config:
                 self.private_key = config_data["private_key"]
                 self.custom_rpc_https = config_data.get("custom_rpc_https") or "https://api.mainnet-beta.solana.com/"
                 self.other_mint = config_data.get("other_mint", "")
-                self.other_mint_decimals = int(config_data.get("other_mint_decimals", ""))
+                self.other_mint_decimals = 10**int(config_data.get("other_mint_decimals", ""))
                 self.other_mint_symbol = config_data.get("other_mint_symbol", "")
                 self.trading_interval_seconds = int(config_data.get("trading_interval_seconds", "60"))
+                self.slippage = int(config_data.get("slippage", "50"))
             except json.JSONDecodeError as e:
                 log_general.error(f"Error parsing JSON: {e}")
                 exit(1)

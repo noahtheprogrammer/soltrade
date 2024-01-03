@@ -59,13 +59,11 @@ def perform_analysis():
     rsi = calculate_rsi(dataframe=df, length=14)
     upper_bb, lower_bb = calculate_bbands(dataframe=df, length=14)
 
-    log_general.info(get_statistics())
+    log_general.debug(get_statistics())
 
     if not position:
-        input_amount = round(find_balance(config().usdc_mint), 1) - 0.2  # TODO: make this configurable
-        
+        input_amount = round(find_balance(config().usdc_mint), 1) - 2  # TODO: make this configurable
         if (ema_short > ema_medium or price < lower_bb.iat[-1]) and rsi <= 31:
-            log_general.info(timestamp() + ": Soltrade has detected a buy signal.")
             log_transaction.info(timestamp() + ": Soltrade has detected a buy signal.")
             log_transaction.info(get_statistics())
             asyncio.run(perform_swap(input_amount, config().usdc_mint))
@@ -76,7 +74,6 @@ def perform_analysis():
 
         if price <= stoploss or price >= takeprofit:
             message = timestamp() + ": Soltrade has detected a sell signal. Stoploss or takeprofit has been reached."
-            log_general.info(message)
             log_transaction.info(message)
             log_transaction.info(get_statistics())
             asyncio.run(perform_swap(input_amount, config().other_mint_symbol))
@@ -85,7 +82,6 @@ def perform_analysis():
 
         if (ema_short < ema_medium or price > upper_bb.iat[-1]) and rsi >= 68:
             message = timestamp() + ": Soltrade has detected a sell signal. EMA or BB has been reached."
-            log_general.info(message)
             log_transaction.info(message)
             log_transaction.info(get_statistics())
             asyncio.run(perform_swap(input_amount, config().other_mint_symbol))
