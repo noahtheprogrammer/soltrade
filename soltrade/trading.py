@@ -4,7 +4,7 @@ import pandas as pd
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from soltrade.transactions import perform_swap, position
+from soltrade.transactions import perform_swap, MarketPosition
 from soltrade.indicators import calculate_ema, calculate_rsi, calculate_bbands
 from soltrade.utils import timestamp
 from soltrade.wallet import find_balance
@@ -61,11 +61,15 @@ def perform_analysis():
 
     log_general.debug(get_statistics())
 
-    if not position:
-        input_amount = round(find_balance(config().usdc_mint), 1) - 2  # TODO: make this configurable
+    if not MarketPosition().position:
+        usdc_balance = find_balance(config().usdc_mint)
+        input_amount = round(usdc_balance, 1) - 2  # TODO: make this configurable
         if (ema_short > ema_medium or price < lower_bb.iat[-1]) and rsi <= 31:
             log_transaction.info(timestamp() + ": Soltrade has detected a buy signal.")
             log_transaction.info(get_statistics())
+            if input_amount <= 0 or input_amount >= usdc_balance:
+                log_transaction.info(timestamp() + ": Soltrade has detected a buy signal, but does not have enough USDC to trade.")
+                return
             asyncio.run(perform_swap(input_amount, config().usdc_mint))
             stoploss = cl.iat[-1] * 0.925
             takeprofit = cl.iat[-1] * 1.25

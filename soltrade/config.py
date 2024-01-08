@@ -14,11 +14,13 @@ class Config:
         self.private_key = None
         self.custom_rpc_https = None
         self.usdc_mint = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+        self.sol_mint = "So11111111111111111111111111111111111111112"
         self.other_mint = None
         self.other_mint_decimals = None
         self.other_mint_symbol = None
         self.trading_interval_seconds = None
         self.slippage = None  # bps
+        self.computeUnitPriceMicroLamports = None
         self.load_config()
 
     def load_config(self):
@@ -38,6 +40,7 @@ class Config:
                 self.other_mint_symbol = config_data.get("other_mint_symbol", "")
                 self.trading_interval_seconds = int(config_data.get("trading_interval_seconds", "60"))
                 self.slippage = int(config_data.get("slippage", "50"))
+                self.computeUnitPriceMicroLamports = int(config_data.get("computeUnitPriceMicroLamports", 20 * 14000))  # default fee of roughly $.04 today
             except json.JSONDecodeError as e:
                 log_general.error(f"Error parsing JSON: {e}")
                 exit(1)

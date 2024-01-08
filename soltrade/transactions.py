@@ -10,8 +10,22 @@ from soltrade.log import log_general, log_transaction
 from soltrade.config import config
 
 
-# Market position
-position = False
+class MarketPosition:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(MarketPosition, cls).__new__(cls)
+            cls._instance._position = False  # Use a different name for the internal attribute
+        return cls._instance
+
+    @property
+    def position(self):
+        return self._instance._position
+
+    @position.setter
+    def position(self, value):
+        self._instance._position = value
 
 
 # Returns the route to be manipulated in createTransaction()
@@ -28,6 +42,7 @@ async def create_exchange(input_amount, input_token_mint):
     
     # Finds the response and converts it into a readable array
     api_link = f"https://quote-api.jup.ag/v6/quote?inputMint={input_token_mint}&outputMint={output_token_mint}&amount={int(input_amount * token_decimals)}&slippageBps={config().slippage}"
+    log_transaction.info(f"Soltrade API Link: {api_link}")
     async with httpx.AsyncClient() as client:
         response = await client.get(api_link)
         return response.json()
@@ -41,7 +56,8 @@ async def create_transaction(quote):
     parameters = {
         "quoteResponse": quote,
         "userPublicKey": str(config().public_address),
-        "wrapUnwrapSOL": True
+        "wrapUnwrapSOL": True,
+        "computeUnitPriceMicroLamports": 20 * 14000  # fee of roughly $.04  :shrug:
     }
 
     # Returns the JSON parsed response of Jupiter
@@ -82,7 +98,7 @@ async def perform_swap(sent_amount, sent_token_mint):
             bought_amount = int(quote['outAmount']) / usdc_decimals
             log_transaction.info(f"Sold {sent_amount} {config().other_mint_symbol} for {bought_amount:.2f} USDC")
 
-        position = sent_token_mint != config().usdc_mint
+        MarketPosition().position = sent_token_mint == config().usdc_mint
     except Exception as e:
         log_transaction.error(timestamp() + ": Soltrade was unable to take a market position.")
         log_transaction.error(timestamp() + f": SoltradeException: {e}")
