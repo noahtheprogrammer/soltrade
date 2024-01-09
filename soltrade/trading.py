@@ -80,7 +80,7 @@ def perform_analysis():
             message = timestamp() + ": Soltrade has detected a sell signal. Stoploss or takeprofit has been reached."
             log_transaction.info(message)
             log_transaction.info(get_statistics())
-            asyncio.run(perform_swap(input_amount, config().other_mint_symbol))
+            asyncio.run(perform_swap(input_amount, config().other_mint))
             stoploss = takeprofit = 0
             return
 
@@ -88,7 +88,7 @@ def perform_analysis():
             message = timestamp() + ": Soltrade has detected a sell signal. EMA or BB has been reached."
             log_transaction.info(message)
             log_transaction.info(get_statistics())
-            asyncio.run(perform_swap(input_amount, config().other_mint_symbol))
+            asyncio.run(perform_swap(input_amount, config().other_mint))
             stoploss = takeprofit = 0
 
 
