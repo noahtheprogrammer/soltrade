@@ -21,6 +21,9 @@ class Config:
         self.trading_interval_seconds = None
         self.slippage = None  # bps
         self.computeUnitPriceMicroLamports = None
+        self.candles_path = None
+        self.indicators_path = None
+        self.aggregate_minutes = None
         self.load_config()
 
     def load_config(self):
@@ -41,6 +44,9 @@ class Config:
                 self.trading_interval_seconds = int(config_data.get("trading_interval_seconds", "60"))
                 self.slippage = int(config_data.get("slippage", "50"))
                 self.computeUnitPriceMicroLamports = int(config_data.get("computeUnitPriceMicroLamports", 20 * 14000))  # default fee of roughly $.04 today
+                self.candles_path = config_data.get("candles_path", "candles.csv")
+                self.indicators_path = config_data.get("indicators_path", "indicators.csv")
+                self.aggregate_minutes = int(config_data.get("aggregate_minutes", 5))
             except json.JSONDecodeError as e:
                 log_general.error(f"Error parsing JSON: {e}")
                 exit(1)

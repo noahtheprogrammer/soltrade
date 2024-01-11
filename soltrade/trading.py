@@ -1,3 +1,6 @@
+from pathlib import Path
+from datetime import datetime
+
 import requests
 import asyncio
 import pandas as pd
@@ -24,13 +27,48 @@ price = 0
 def fetch_candlestick():
     url = "https://min-api.cryptocompare.com/data/v2/histominute"
     headers = {'authorization': config().api_key}
-    params = {'fsym': config().other_mint_symbol, 'tsym': 'USD', 'limit': 50, 'aggregate': 5}
+    params = {
+        'fsym': config().other_mint_symbol, 
+        'tsym': 'USD', 
+        'limit': 50, 
+        'aggregate': config().aggregate_minutes
+    }
     response = requests.get(url, headers=headers, params=params)
     if response.json().get('Response') == 'Error':
         log_general.error(response.json().get('Message'))
         exit()
     return response.json()
 
+# Store market data for historical tracking
+def store_candlestick(df):
+    pd.set_option("display.precision", 14)
+    f = Path(config().candles_path)
+    if f.is_file():
+        existing = pd.read_csv(f)
+        df = pd.concat([existing, df])
+    df.drop_duplicates(subset=['time'], keep=False, inplace=True)
+    df.to_csv(f)
+    return True
+
+# Store indicator data for historical tracking
+def store_indicators(df):
+    pd.set_option("display.precision", 14)
+    f = Path(config().indicators_path)
+    ub, lb = calculate_bbands(dataframe=df, length=14)
+    data = {
+        'ema_short': [calculate_ema(dataframe=df, length=5)],
+        'ema_medium': [calculate_ema(dataframe=df, length=20)],
+        'rsi': [calculate_rsi(dataframe=df, length=14)],
+        'upper_bb': [ub.iat[-1]],
+        'lower_bb': [lb.iat[-1]],
+        'time': [pd.to_datetime(datetime.utcnow().timestamp(), unit='s')]
+    }
+    _df = pd.DataFrame(data)
+    if f.is_file():
+        existing = pd.read_csv(f)
+        _df = pd.concat([existing, _df])
+    _df.to_csv(f)
+    return True
 
 # Analyzes the current market variables and determines trades
 def perform_analysis():
@@ -49,8 +87,11 @@ def perform_analysis():
 
     # Creates DataFrame for manipulation
     columns = ['close', 'high', 'low', 'open', 'time', 'VF', 'VT']
+    pd.set_option("display.precision", 14)
     df = pd.DataFrame(candle_dict, columns=columns)
     df['time'] = pd.to_datetime(df['time'], unit='s')
+    store_candlestick(df)
+    store_indicators(df)
 
     # DataFrame variable for TA-Lib manipulation
     cl = df['close']
@@ -64,10 +105,10 @@ def perform_analysis():
 
     log_general.debug(get_statistics())
 
-    if not MarketPosition().position:
+    if not MarketPosition().position: # TODO: make strategy modular
         usdc_balance = find_balance(config().usdc_mint)
         input_amount = round(usdc_balance, 1) - 2  # TODO: make this configurable
-        if (ema_short > ema_medium or price < lower_bb.iat[-1]) and rsi <= 31:
+        if (ema_short > ema_medium or price < lower_bb.iat[-1]) and rsi <= 31: # TODO: make this configurable
             log_transaction.info(timestamp() + ": Soltrade has detected a buy signal.")
             log_transaction.info(get_statistics())
             if input_amount <= 0 or input_amount >= usdc_balance:
@@ -87,7 +128,7 @@ def perform_analysis():
             stoploss = takeprofit = 0
             return
 
-        if (ema_short < ema_medium or price > upper_bb.iat[-1]) and rsi >= 68:
+        if (ema_short < ema_medium or price > upper_bb.iat[-1]) and rsi >= 68: # TODO: make this configurable
             message = timestamp() + ": Soltrade has detected a sell signal. EMA or BB has been reached."
             log_transaction.info(message)
             log_transaction.info(get_statistics())
