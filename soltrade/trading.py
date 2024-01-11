@@ -26,6 +26,9 @@ def fetch_candlestick():
     headers = {'authorization': config().api_key}
     params = {'fsym': config().other_mint_symbol, 'tsym': 'USD', 'limit': 50, 'aggregate': 5}
     response = requests.get(url, headers=headers, params=params)
+    if response.json().get('Response') == 'Error':
+        log_general.error(response.json().get('Message'))
+        exit()
     return response.json()
 
 
