@@ -1,7 +1,13 @@
+import argparse
+
 import requests
 import pandas as pd
-
 import backtrader as bt
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-f", "--file", required=False, help="The path to a scrape file to visualize")
+args = parser.parse_args()
 
 
 class SoltradeStrategy(bt.Strategy):
@@ -45,10 +51,18 @@ def format_data():
     return formatted_df
 
 
-data = bt.feeds.PandasData(dataname=format_data())
+if args.file:
+    _data = pd.read_csv(args.file)
+    _data['time'] = pd.to_datetime(_data['time'])
+    _data = _data.set_index('time')
+    data = bt.feeds.PandasData(dataname=_data)
+else:
+    data = bt.feeds.PandasData(dataname=format_data())
 
 cerebro = bt.Cerebro()
 cerebro.addstrategy(SoltradeStrategy)
 cerebro.adddata(data)
+print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
 cerebro.run()
+print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
 cerebro.plot()
