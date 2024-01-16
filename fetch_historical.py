@@ -28,7 +28,7 @@ if args.file and not args.timestamp:
 with open('config.json', 'r') as f:
     config = json.loads(f.read())
 
-def fetch_data(limit=2000, agg=5, toTs=None):
+def fetch_data(limit=240, agg=1, toTs=None):
     """
     Fetch data from CryptoCompare of the configured token.
     Inputs can customize the time aggregation and amount of 
@@ -37,7 +37,7 @@ def fetch_data(limit=2000, agg=5, toTs=None):
     Returns a tuple with 0 being the timestamp to begin
     next query to and a dataframe of fetched and formatted data.
     """
-    url = "https://min-api.cryptocompare.com/data/v2/histominute"
+    url = "https://min-api.cryptocompare.com/data/v2/histohour"
     headers = {'authorization': config['api_key']}
     params = {
         'fsym': config['other_mint_symbol'], 
@@ -68,13 +68,13 @@ if __name__ == '__main__':
     """
     amount_fetched = 0
     toTs = timestamp if args.timestamp else None
-    limit = 1500
-    agg = 30
+    limit = 240
+    agg = 1
     ts = int(datetime.utcnow().timestamp())
     name = f'data/{config["other_mint_symbol"]}-past{num_records}-{ts}.csv'
     if args.file:
         name = args.file
-    print(f'[+] Fetching {num_records} records on {agg} minute aggregate for {config["other_mint_symbol"]} to {name}')
+    print(f'[+] Fetching {num_records} records on {agg} hour aggregate for {config["other_mint_symbol"]} to {name}')
     while amount_fetched < num_records:
         print(f'{datetime.utcnow().isoformat()} - fetching next {limit} records {f"until {toTs}" if toTs else ""}')
         if amount_fetched == 0 and not args.timestamp:
