@@ -25,9 +25,11 @@ Open the installation folder and create a file titled `config.json` with the fol
   "other_mint": "",
   "other_mint_decimals": "",
   "other_mint_symbol": "",
-  "trading_interval_seconds": ""
+  "trading_interval_seconds": "",
+  "jupiter_swap_api": "https://public.jupiterapi.com"
 }
 ```
+
 Next, install the dependencies for Soltrade by opening Python and running the following command.
 This will install automatically install the required modules and their respective versions.
 ```
@@ -40,6 +42,11 @@ Alternatively, you can install using poetry:
 python -m pip install poetry
 poetry install
 ```
+
+### Self-Hosted Jupiter API Support
+
+You can set custom URLs on `jupiter_swap_api` in `config.json` for any self-hosted Jupiter APIs. Like the [V6 Swap API](https://station.jup.ag/docs/apis/self-hosted), [Public Jupiter API](https://www.jupiterapi.com/) or [QuickNode's Metis API](https://marketplace.quicknode.com/add-on/metis-jupiter-v6-swap-api). We default to the [Public Jupiter API](https://www.jupiterapi.com/) since its faster and has higher rate limits that the Jupiter hosted endpoint.
+
 
 ### Usage
 Make sure you have deposited at least 1 $USDC in your connected wallet for Soltrade to begin trading, along with 0.1 $SOL to pay for gas.

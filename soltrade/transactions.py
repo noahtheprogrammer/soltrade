@@ -41,7 +41,7 @@ async def create_exchange(input_amount, input_token_mint):
         token_decimals = config().other_mint_decimals
     
     # Finds the response and converts it into a readable array
-    api_link = f"https://quote-api.jup.ag/v6/quote?inputMint={input_token_mint}&outputMint={output_token_mint}&amount={int(input_amount * token_decimals)}&slippageBps={config().slippage}"
+    api_link = f"{config().jupiter_swap_api}/quote?inputMint={input_token_mint}&outputMint={output_token_mint}&amount={int(input_amount * token_decimals)}&slippageBps={config().slippage}"
     log_transaction.info(f"Soltrade API Link: {api_link}")
     async with httpx.AsyncClient() as client:
         response = await client.get(api_link)
@@ -62,7 +62,7 @@ async def create_transaction(quote):
 
     # Returns the JSON parsed response of Jupiter
     async with httpx.AsyncClient() as client:
-        response = await client.post("https://quote-api.jup.ag/v6/swap", json=parameters)
+        response = await client.post(f"{config().jupiter_swap_api}/swap", json=parameters)
         return response.json()
 
 

@@ -21,6 +21,7 @@ class Config:
         self.trading_interval_seconds = None
         self.slippage = None  # bps
         self.computeUnitPriceMicroLamports = None
+        self.jupiter_swap_api = None
         self.load_config()
 
     def load_config(self):
@@ -41,6 +42,7 @@ class Config:
                 self.trading_interval_seconds = int(config_data.get("trading_interval_seconds", "60"))
                 self.slippage = int(config_data.get("slippage", "50"))
                 self.computeUnitPriceMicroLamports = int(config_data.get("computeUnitPriceMicroLamports", 20 * 14000))  # default fee of roughly $.04 today
+                self.jupiter_swap_api  = config_data.get("jupiter_swap_api", "https://public.jupiterapi.com")
             except json.JSONDecodeError as e:
                 log_general.error(f"Error parsing JSON: {e}")
                 exit(1)
