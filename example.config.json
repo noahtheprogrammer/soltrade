@@ -1,9 +1,0 @@
-{
-  "api_key": "<CryptoCompare API key>",
-  "private_key": "<wallet_private_key>",
-  "custom_rpc_https": "",
-  "other_mint": "StepAscQoEioFxxWGnh2sLBDFp9d8rvKz2Yp39iDpyT",
-  "other_mint_decimals": "9",
-  "other_mint_symbol": "STEP",
-  "trading_interval_seconds": "30"
-}

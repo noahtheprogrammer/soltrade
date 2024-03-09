@@ -12,7 +12,7 @@ class CustomFormatter(logging.Formatter):
     red = "\x1b[31;21m"
     bold_red = "\x1b[31;1m"
     reset = "\x1b[0m"
-    format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    format = "%(asctime)s       %(message)s"
 
     FORMATS = {
         logging.DEBUG: grey + format + reset,
@@ -37,7 +37,7 @@ class AutoFlushStreamHandler(StreamHandler):
 def setup_logger(name, log_file, level=logging.INFO, add_to_general=False):
     """Function to set up a logger with rotating file handler and console output."""
     # Formatter without color codes for file output
-    file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
+    file_formatter = logging.Formatter("%(asctime)s     %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
     # File handler setup
     file_handler = RotatingFileHandler(log_file, maxBytes=1000000, backupCount=5)

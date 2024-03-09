@@ -5,7 +5,6 @@ from solana.rpc.types import TxOpts
 from solders.transaction import VersionedTransaction
 from solders import message
 
-from soltrade.utils import timestamp, handle_rate_limiting
 from soltrade.log import log_general, log_transaction
 from soltrade.config import config
 
@@ -50,7 +49,8 @@ async def create_exchange(input_amount, input_token_mint):
 
 # Returns the swap_transaction to be manipulated in sendTransaction()
 async def create_transaction(quote):
-    log_transaction.info(f"Creating transaction for {quote}")
+    log_transaction.info(f"""Soltrade is creating transaction for the following quote: 
+{quote}""")
 
     # Parameters used for the Jupiter POST request
     parameters = {
@@ -81,7 +81,7 @@ def send_transaction(swap_transaction, opts):
 # Uses the previous functions and parameters to exchange Solana token currencies
 async def perform_swap(sent_amount, sent_token_mint):
     global position
-    log_general.info(timestamp() + ": Soltrade is taking a market position.")
+    log_general.info("Soltrade is taking a market position.")
     try:
         quote = await create_exchange(sent_amount, sent_token_mint)
         trans = await create_transaction(quote)
@@ -100,5 +100,5 @@ async def perform_swap(sent_amount, sent_token_mint):
 
         MarketPosition().position = sent_token_mint == config().usdc_mint
     except Exception as e:
-        log_transaction.error(timestamp() + ": Soltrade was unable to take a market position.")
-        log_transaction.error(timestamp() + f": SoltradeException: {e}")
+        log_transaction.error("Soltrade was unable to take a market position.")
+        log_transaction.error(f"SoltradeException: {e}")

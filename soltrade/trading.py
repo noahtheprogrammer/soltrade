@@ -6,7 +6,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from soltrade.transactions import perform_swap, MarketPosition
 from soltrade.indicators import calculate_ema, calculate_rsi, calculate_bbands
-from soltrade.utils import timestamp
 from soltrade.wallet import find_balance
 from soltrade.log import log_general, log_transaction
 from soltrade.config import config
@@ -34,7 +33,7 @@ def fetch_candlestick():
 
 # Analyzes the current market variables and determines trades
 def perform_analysis():
-    log_general.debug(timestamp() + ": Soltrade is analyzing the market.")
+    log_general.debug("Soltrade is analyzing the market; no trade has been executed.")
 
     global stoploss
     global takeprofit
@@ -62,34 +61,30 @@ def perform_analysis():
     rsi = calculate_rsi(dataframe=df, length=14)
     upper_bb, lower_bb = calculate_bbands(dataframe=df, length=14)
 
-    log_general.debug(get_statistics())
-
     if not MarketPosition().position:
         usdc_balance = find_balance(config().usdc_mint)
-        input_amount = round(usdc_balance, 1) - 2  # TODO: make this configurable
+        input_amount = round(usdc_balance, 1) - 0.01
         if (ema_short > ema_medium or price < lower_bb.iat[-1]) and rsi <= 31:
-            log_transaction.info(timestamp() + ": Soltrade has detected a buy signal.")
+            log_transaction.info("Soltrade has detected a buy signal.")
             log_transaction.info(get_statistics())
             if input_amount <= 0 or input_amount >= usdc_balance:
-                log_transaction.info(timestamp() + ": Soltrade has detected a buy signal, but does not have enough USDC to trade.")
+                log_transaction.info("Soltrade has detected a buy signal, but does not have enough USDC to trade.")
                 return
             asyncio.run(perform_swap(input_amount, config().usdc_mint))
             stoploss = cl.iat[-1] * 0.925
             takeprofit = cl.iat[-1] * 1.25
     else:
-        input_amount = round(find_balance(config().other_mint), 1) - 0.2
+        input_amount = round(find_balance(config().other_mint), 1) - 0.01
 
         if price <= stoploss or price >= takeprofit:
-            message = timestamp() + ": Soltrade has detected a sell signal. Stoploss or takeprofit has been reached."
-            log_transaction.info(message)
+            log_transaction.info("Soltrade has detected a sell signal. Stoploss or takeprofit has been reached.")
             log_transaction.info(get_statistics())
             asyncio.run(perform_swap(input_amount, config().other_mint))
             stoploss = takeprofit = 0
             return
 
         if (ema_short < ema_medium or price > upper_bb.iat[-1]) and rsi >= 68:
-            message = timestamp() + ": Soltrade has detected a sell signal. EMA or BB has been reached."
-            log_transaction.info(message)
+            log_transaction.info("Soltrade has detected a sell signal. EMA or BB has been reached.")
             log_transaction.info(get_statistics())
             asyncio.run(perform_swap(input_amount, config().other_mint))
             stoploss = takeprofit = 0
@@ -97,8 +92,8 @@ def perform_analysis():
 
 # This starts the trading function on a timer
 def start_trading():
-    log_general.info(timestamp() + ": Soltrade has now initialized the trading algorithm.")
-    log_general.debug(": Available commands are /statistics, /pause, /resume, and /quit.")
+    log_general.info("Soltrade has now initialized the trading algorithm.")
+    log_general.debug("Available commands are /statistics, /pause, /resume, and /quit.")
 
     trading_sched = BackgroundScheduler()
     trading_sched.add_job(perform_analysis, 'interval', seconds=config().trading_interval_seconds, max_instances=1)
@@ -124,12 +119,13 @@ def start_trading():
 
 def get_statistics():
     return f"""
-        Short EMA                           {ema_short}
-        Medium EMA                          {ema_medium}
-        Relative Strength Index             {rsi}
-        Price                               {price}
-        Upper Bollinger Band                {upper_bb.iat[-1]}
-        Lower Bollinger Band                {lower_bb.iat[-1]}"""
+
+Short EMA                           {ema_short}
+Medium EMA                          {ema_medium}
+Relative Strength Index             {rsi}
+Price                               {price}
+Upper Bollinger Band                {upper_bb.iat[-1]}
+Lower Bollinger Band                {lower_bb.iat[-1]}"""
 
 
 def print_statistics():

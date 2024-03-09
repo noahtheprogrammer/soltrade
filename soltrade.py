@@ -1,7 +1,6 @@
 from soltrade.wallet import find_balance
 from soltrade.config import config
 from soltrade.trading import start_trading
-from soltrade.utils import timestamp
 from soltrade.log import log_general
 
 
@@ -29,14 +28,14 @@ can_run = check_json_state()
 
 # Error catching in case the program is unable to find the properties of the wallet
 try:
-    log_general.info(timestamp() + f": Soltrade has detected {find_balance(config().other_mint)} {config().other_mint_symbol} tokens available for trading.")
+    log_general.info(f"Soltrade has detected {find_balance(config().other_mint)} {config().other_mint_symbol} tokens available for trading.")
 except Exception as e:
-    log_general.error(f": Error finding {config().other_mint_symbol} balance: {e}")
+    log_general.error(f"Error finding {config().other_mint_symbol} balance: {e}")
     exit()
 
 # Checks if the run prompt should be displayed
 if can_run:
-    log_general.debug(timestamp() + ": Soltrade has successfully imported the API requirements.")
+    log_general.debug("Soltrade has successfully imported the API requirements.")
     start_trading()
 else:
     exit()
