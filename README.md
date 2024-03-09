@@ -42,7 +42,7 @@ poetry install
 ```
 
 ### Usage
-Make sure you have deposited at least 1 $USDC in your connected wallet for Soltrade to begin trading, along with 0.1 $SOL to pay for gas.
+Before starting Soltrade, make sure you have deposited at least 1 of the selected $TOKEN in your connected wallet, along with ~0.1 $SOL to cover any additional transaction fees.
 After the installation has been completed, begin Soltrade by running `soltrade.py` on your desktop or using Python commands.
 Then, use the designated inputs to pause, resume, or quit the program.
 
