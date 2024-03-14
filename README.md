@@ -3,7 +3,7 @@
 </div>
 
 ### Introduction
-Soltrade is a Python-based, open source trading bot that I created in order to dive deeper into the workings of the blockchain and leap headfirst into the world of technical analysis. It integrates EMA, RSI, and Bollinger Band indicators into a fifteen-minute interval to predict the most profitable course of action. Jupiter has been integrated into Soltrade as well, allowing for near-instantaneous transactions with minimal fees. Soltrade is fairly customizable, with more user input to come in later versions. A ten-day chart demonstation of open and close positions with Soltrade's algorithm can be viewed below.
+Soltrade is a Python-based, open source trading bot that I created in order to dive deeper into the workings of the blockchain and leap headfirst into the world of technical analysis. It integrates EMA, RSI, and Bollinger Band indicators into a customizable trading interval to predict the most profitable course of action. Jupiter has been integrated into Soltrade as well, allowing for near-instantaneous transactions with minimal fees. Soltrade is fairly customizable, with more user input to come in later versions. A ten-day chart demonstation of open and close positions with Soltrade's algorithm can be viewed below.
 
 <div align="center">
   <img src=https://user-images.githubusercontent.com/81941019/227742349-d87b9dab-286e-47a9-a1b7-51f4e8023274.png alt="demo_chart">
@@ -23,9 +23,9 @@ Open the installation folder and create a file titled `config.json` with the fol
   "private_key": "<wallet_private_key>",
   "custom_rpc_https": "",
   "other_mint": "",
-  "other_mint_decimals": "",
   "other_mint_symbol": "",
-  "trading_interval_seconds": ""
+  "price_update_seconds": "",
+  "trading_interval_minutes": ""
 }
 ```
 Next, install the dependencies for Soltrade by opening Python and running the following command.

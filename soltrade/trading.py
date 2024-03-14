@@ -23,7 +23,7 @@ price = 0
 def fetch_candlestick():
     url = "https://min-api.cryptocompare.com/data/v2/histominute"
     headers = {'authorization': config().api_key}
-    params = {'fsym': config().other_mint_symbol, 'tsym': 'USD', 'limit': 50, 'aggregate': 5}
+    params = {'fsym': config().other_mint_symbol, 'tsym': 'USD', 'limit': 50, 'aggregate': config().trading_interval_minutes}
     response = requests.get(url, headers=headers, params=params)
     if response.json().get('Response') == 'Error':
         log_general.error(response.json().get('Message'))
@@ -96,7 +96,7 @@ def start_trading():
     log_general.debug("Available commands are /statistics, /pause, /resume, and /quit.")
 
     trading_sched = BackgroundScheduler()
-    trading_sched.add_job(perform_analysis, 'interval', seconds=config().trading_interval_seconds, max_instances=1)
+    trading_sched.add_job(perform_analysis, 'interval', seconds=config().price_update_seconds, max_instances=1)
     trading_sched.start()
     perform_analysis()
 

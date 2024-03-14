@@ -37,7 +37,7 @@ async def create_exchange(input_amount, input_token_mint):
         token_decimals = 10**6  # USDC decimals
     else:
         output_token_mint = config().usdc_mint
-        token_decimals = config().other_mint_decimals
+        token_decimals = config().decimals
     
     # Finds the response and converts it into a readable array
     api_link = f"https://quote-api.jup.ag/v6/quote?inputMint={input_token_mint}&outputMint={output_token_mint}&amount={int(input_amount * token_decimals)}&slippageBps={config().slippage}"
@@ -90,8 +90,8 @@ async def perform_swap(sent_amount, sent_token_mint):
         txid = send_transaction(trans["swapTransaction"], opts)
 
         if sent_token_mint == config().usdc_mint:
-            other_mint_decimals = config().other_mint_decimals
-            bought_amount = int(quote['outAmount']) / other_mint_decimals
+            decimals = config().decimals
+            bought_amount = int(quote['outAmount']) / decimals
             log_transaction.info(f"Sold {sent_amount} USDC for {bought_amount:.6f} {config().other_mint_symbol}")
         else:
             usdc_decimals = 10**6  # Assuming USDC has 6 decimal places

@@ -2,6 +2,7 @@ import os
 import json
 import base58
 
+from solders.pubkey import Pubkey
 from solders.keypair import Keypair
 from solana.rpc.api import Client
 from soltrade.log import log_general
@@ -16,10 +17,10 @@ class Config:
         self.usdc_mint = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
         self.sol_mint = "So11111111111111111111111111111111111111112"
         self.other_mint = None
-        self.other_mint_decimals = None
         self.other_mint_symbol = None
-        self.trading_interval_seconds = None
-        self.slippage = None  # bps
+        self.price_update_seconds = None
+        self.trading_interval_minutes = None
+        self.slippage = None  # BPS
         self.computeUnitPriceMicroLamports = None
         self.load_config()
 
@@ -36,10 +37,10 @@ class Config:
                 self.private_key = config_data["private_key"]
                 self.custom_rpc_https = config_data.get("custom_rpc_https") or "https://api.mainnet-beta.solana.com/"
                 self.other_mint = config_data.get("other_mint", "")
-                self.other_mint_decimals = 10**int(config_data.get("other_mint_decimals", ""))
-                self.other_mint_symbol = config_data.get("other_mint_symbol", "")
-                self.trading_interval_seconds = int(config_data.get("trading_interval_seconds", "60"))
-                self.slippage = int(config_data.get("slippage", "50"))
+                self.other_mint_symbol = config_data.get("other_mint_symbol", "UNKNOWN")
+                self.price_update_seconds = int(config_data.get("price_update_seconds", 60))
+                self.trading_interval_minutes = int(config_data.get("trading_interval_minutes", 1))
+                self.slippage = int(config_data.get("slippage", 50))
                 self.computeUnitPriceMicroLamports = int(config_data.get("computeUnitPriceMicroLamports", 20 * 14000))  # default fee of roughly $.04 today
             except json.JSONDecodeError as e:
                 log_general.error(f"Error parsing JSON: {e}")
@@ -64,6 +65,13 @@ class Config:
     def client(self):
         rpc_url = self.custom_rpc_https
         return Client(rpc_url)
+    
+    @property
+    def decimals(self):
+        response = self.client.get_account_info_json_parsed(Pubkey.from_string(config().other_mint)).to_json()
+        json_response = json.loads(response)
+        value = 10**json_response["result"]["value"]["data"]["parsed"]["info"]["decimals"]
+        return value
 
 
 _config_instance = None
