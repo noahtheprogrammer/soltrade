@@ -1,8 +1,10 @@
 import httpx
+import json
 
 import base64
 from solana.rpc.types import TxOpts
 from solders.transaction import VersionedTransaction
+from solders.signature import Signature
 from solders import message
 
 from soltrade.log import log_general, log_transaction
@@ -77,6 +79,11 @@ def send_transaction(swap_transaction, opts):
     log_transaction.info(f"Soltrade TxID: {txid}")
     return txid
 
+def validate_transaction(txid):
+    json_response = config().client.get_signature_statuses([Signature.from_string(txid)]).to_json()
+    parsed_response = json.loads(json_response)
+    status = parsed_response["result"]["value"][0]
+    return status
 
 # Uses the previous functions and parameters to exchange Solana token currencies
 async def perform_swap(sent_amount, sent_token_mint):
@@ -85,16 +92,27 @@ async def perform_swap(sent_amount, sent_token_mint):
     try:
         quote = await create_exchange(sent_amount, sent_token_mint)
         trans = await create_transaction(quote)
-
         opts = TxOpts(skip_preflight=True, max_retries=3)
         txid = send_transaction(trans["swapTransaction"], opts)
+
+        if validate_transaction(txid) == None:
+            for i in range(0,2): # TODO: make this a customizable retry variable in config.json
+                quote = await create_exchange(sent_amount, sent_token_mint)
+                trans = await create_transaction(quote)
+                opts = TxOpts(skip_preflight=True, max_retries=3)
+                txid_attempt = send_transaction(trans["swapTransaction"], opts)
+
+                if validate_transaction(txid_attempt) != None:
+                    break
+            log_transaction.error("Soltrade was unable to take a market position.")
+            return
 
         if sent_token_mint == config().usdc_mint:
             decimals = config().decimals
             bought_amount = int(quote['outAmount']) / decimals
             log_transaction.info(f"Sold {sent_amount} USDC for {bought_amount:.6f} {config().other_mint_symbol}")
         else:
-            usdc_decimals = 10**6  # Assuming USDC has 6 decimal places
+            usdc_decimals = 10**6 # TODO: make this a constant variable in utils.py
             bought_amount = int(quote['outAmount']) / usdc_decimals
             log_transaction.info(f"Sold {sent_amount} {config().other_mint_symbol} for {bought_amount:.2f} USDC")
 
