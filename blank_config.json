@@ -1,0 +1,18 @@
+{
+  "api_key": "",
+  "private_key": "",
+  "custom_rpc_https": "",
+  "other_mint": "So11111111111111111111111111111111111111112",
+  "other_mint_symbol": "SOL",
+  "price_update_seconds": "60",
+  "trading_interval_minutes": "15",
+  "verbose":  true,
+  "strategy": "default",
+  "sell_at_loss": false,
+  "stoploss": "20.0",
+  "trailing_stoploss_target": "5.0",
+  "trailing_stoploss": "1.5",
+  "telegram": true,
+  "tg_bot_token": "",
+  "tg_bot_uid": ""
+}

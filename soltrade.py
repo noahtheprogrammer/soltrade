@@ -1,8 +1,8 @@
+import asyncio
 from soltrade.wallet import find_balance
 from soltrade.config import config
 from soltrade.trading import start_trading
 from soltrade.log import log_general
-
 
 # Initialize configuration
 config()
@@ -10,10 +10,11 @@ config()
 def check_json_state() -> bool:
     if config().keypair and config().secondary_mint:
         return True
+
     return False
 
 # Prints "Soltrade" and information about the connected wallet
-print("""                    $$\   $$\                              $$\           
+splash = ("""                    $$\   $$\                              $$\           
                     $$ |  $$ |                             $$ |          
  $$$$$$$\  $$$$$$\  $$ |$$$$$$\    $$$$$$\  $$$$$$\   $$$$$$$ | $$$$$$\  
 $$  _____|$$  __$$\ $$ |\_$$  _|  $$  __$$\ \____$$\ $$  __$$ |$$  __$$\ 
@@ -22,6 +23,8 @@ $$  _____|$$  __$$\ $$ |\_$$  _|  $$  __$$\ \____$$\ $$  __$$ |$$  __$$\
 $$$$$$$  |\$$$$$$  |$$ |  \$$$$  |$$ |     \$$$$$$$ |\$$$$$$$ |\$$$$$$$\ 
 \_______/  \______/ \__|   \____/ \__|      \_______| \_______| \_______|
 """)
+
+print(splash)
 can_run = check_json_state()
 
 # Error catching in case the program is unable to find the properties of the wallet
@@ -34,6 +37,7 @@ except Exception as e:
 # Checks if the run prompt should be displayed
 if can_run:
     log_general.debug("Soltrade has successfully imported the API requirements.")
+
     start_trading()
 else:
     exit()
