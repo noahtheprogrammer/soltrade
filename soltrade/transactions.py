@@ -12,6 +12,7 @@ from solders import message
 
 from soltrade.log import log_general, log_transaction
 from soltrade.config import config
+from soltrade.tg_bot import send_info
 
 
 class MarketPosition:
@@ -96,6 +97,29 @@ async def create_transaction(quote: dict) -> dict:
         response = await client.post("https://quote-api.jup.ag/v6/swap", json=parameters)
         return response.json()
 
+def get_transaction_details(tx_id):
+    # RPC endpoint URL
+    rpc_url = 'https://api.mainnet-beta.solana.com'
+    
+    # Construct the JSON-RPC request
+    payload = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "getTransaction",
+        "params": [tx_id],
+    }
+    
+    # Send the request
+    response = requests.post(rpc_url, json=payload)
+    
+    if response.status_code == 200:
+        result = response.json()
+        if 'result' in result:
+            return result['result']
+        else:
+            print("Error: Transaction not found")
+    else:
+        print("Error: Failed to retrieve transaction details")
 
 # Deserializes and sends the transaction from the swap information given
 def send_transaction(swap_transaction: dict, opts: TxOpts) -> Signature:
@@ -104,8 +128,11 @@ def send_transaction(swap_transaction: dict, opts: TxOpts) -> Signature:
     signed_txn = VersionedTransaction.populate(raw_txn.message, [signature])
 
     result = config().client.send_raw_transaction(bytes(signed_txn), opts)
+    print(result)
     txid = result.value
     log_transaction.info(f"Soltrade TxID: {txid}")
+    verified_tx = get_transaction_details(tx_id)
+    log_transaction.info(f"Soltrade Verified on Chain! {verified_tx}")
     return txid
 
 def find_transaction_error(txid: Signature) -> dict:
