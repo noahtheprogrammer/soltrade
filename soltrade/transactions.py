@@ -1,8 +1,10 @@
 import httpx
 import json
+import asyncio
 
 import base64
 from solana.rpc.types import TxOpts
+from solana.rpc.core import RPCException
 from solders.transaction import VersionedTransaction
 from solders.signature import Signature
 from solders import message
@@ -79,44 +81,61 @@ def send_transaction(swap_transaction, opts):
     log_transaction.info(f"Soltrade TxID: {txid}")
     return txid
 
-def validate_transaction(txid):
-    json_response = config().client.get_signature_statuses([Signature.from_string(txid)]).to_json()
-    parsed_response = json.loads(json_response)
-    status = parsed_response["result"]["value"][0]
-    return status
+def find_transaction_error(txid: Signature):
+    json_response = config().client.get_transaction(txid, max_supported_transaction_version=0).to_json()
+    parsed_response = json.loads(json_response)["result"]["meta"]["err"]
+    return parsed_response
+
+def find_last_valid_block_height():
+    json_response = config().client.get_latest_blockhash(commitment="confirmed").to_json()
+    parsed_response = json.loads(json_response)["result"]["value"]["lastValidBlockHeight"]
+    return parsed_response
 
 # Uses the previous functions and parameters to exchange Solana token currencies
 async def perform_swap(sent_amount, sent_token_mint):
     global position
     log_general.info("Soltrade is taking a market position.")
-    try:
-        quote = await create_exchange(sent_amount, sent_token_mint)
-        trans = await create_transaction(quote)
-        opts = TxOpts(skip_preflight=True, max_retries=3)
-        txid = send_transaction(trans["swapTransaction"], opts)
 
-        if validate_transaction(txid) == None:
-            for i in range(0,2): # TODO: make this a customizable retry variable in config.json
+    quote = trans = opts = txid = tx_error = None
+    is_tx_successful = False
+
+    for i in range(0, 3):
+        if not is_tx_successful:
+            try:
                 quote = await create_exchange(sent_amount, sent_token_mint)
                 trans = await create_transaction(quote)
-                opts = TxOpts(skip_preflight=True, max_retries=3)
-                txid_attempt = send_transaction(trans["swapTransaction"], opts)
-
-                if validate_transaction(txid_attempt) != None:
-                    break
-            log_transaction.error("Soltrade was unable to take a market position.")
-            return
-
-        if sent_token_mint == config().usdc_mint:
-            decimals = config().decimals
-            bought_amount = int(quote['outAmount']) / decimals
-            log_transaction.info(f"Sold {sent_amount} USDC for {bought_amount:.6f} {config().other_mint_symbol}")
+                opts = TxOpts(skip_preflight=False, preflight_commitment="confirmed", last_valid_block_height=find_last_valid_block_height())
+                txid = send_transaction(trans["swapTransaction"], opts)
+            except Exception:
+                if RPCException:
+                    log_general.warning(f"Soltrade failed to complete transaction {i}. Retrying.")
+                    continue
+                else:
+                    raise
+            for i in range(0, 3):
+                try:
+                    await asyncio.sleep(35)
+                    tx_error = find_transaction_error(txid)
+                    if not tx_error:
+                        is_tx_successful = True
+                        break
+                except TypeError:
+                    log_general.warning("Soltrade failed to verify the existence of the transaction. Retrying.")
+                    continue
         else:
-            usdc_decimals = 10**6 # TODO: make this a constant variable in utils.py
-            bought_amount = int(quote['outAmount']) / usdc_decimals
-            log_transaction.info(f"Sold {sent_amount} {config().other_mint_symbol} for {bought_amount:.2f} USDC")
+            break
 
-        MarketPosition().position = sent_token_mint == config().usdc_mint
-    except Exception as e:
-        log_transaction.error("Soltrade was unable to take a market position.")
-        log_transaction.error(f"SoltradeException: {e}")
+    if tx_error or not is_tx_successful:
+        log_general.error("Soltrade failed to complete the transaction due to slippage issues with Jupiter.")
+        return
+
+    if sent_token_mint == config().usdc_mint:
+        decimals = config().decimals
+        bought_amount = int(quote['outAmount']) / decimals
+        log_transaction.info(f"Sold {sent_amount} USDC for {bought_amount:.6f} {config().other_mint_symbol}")
+    else:
+        usdc_decimals = 10**6 # TODO: make this a constant variable in utils.py
+        bought_amount = int(quote['outAmount']) / usdc_decimals
+        log_transaction.info(f"Sold {sent_amount} {config().other_mint_symbol} for {bought_amount:.2f} USDC")
+
+    MarketPosition().position = sent_token_mint == config().usdc_mint
