@@ -3,7 +3,7 @@
 </div>
 
 ### Introduction
-Soltrade is a Python-based, open source trading bot that I created in order to dive deeper into the workings of the blockchain and leap headfirst into the world of technical analysis. It integrates EMA, RSI, and Bollinger Band indicators into a customizable trading interval to predict the most profitable course of action. Jupiter has been integrated into Soltrade as well, allowing for near-instantaneous transactions with minimal fees. Soltrade is fairly customizable, with more user input to come in later versions. A ten-day chart demonstation of open and close positions with Soltrade's algorithm can be viewed below.
+Soltrade is a Python-based, open source trading bot that we created in order to dive deeper into the workings of the blockchain and leap headfirst into the world of technical analysis. It integrates EMA, RSI, and Bollinger Band indicators into a customizable trading interval to predict the most profitable course of action. Jupiter has been integrated into Soltrade as well, allowing for near-instantaneous transactions with minimal fees. Soltrade is fairly customizable, with more user input to come in later versions. A ten-day chart demonstation of open and close positions with Soltrade's algorithm can be viewed below.
 
 <div align="center">
   <img src=https://user-images.githubusercontent.com/81941019/227742349-d87b9dab-286e-47a9-a1b7-51f4e8023274.png alt="demo_chart">
@@ -14,7 +14,7 @@ This software was created for education purposes only and, like all trading bots
 Please do not risk money you are not willing or cannot afford to lose. 
 The creators and contributors of Soltrade are not responsible for any losses you might incur during trading.
 
-### Installation
+### Setup
 In order to use Soltrade you will need a free CryptoCompare API key and access to a wallet application such as Phantom.
 Open the installation folder and create a file titled `config.json` with the following code block, replacing the placeholder values with your API key and wallet private key. Both keys are required to receive pricing data and perform trading transactions.
 ```
@@ -22,13 +22,20 @@ Open the installation folder and create a file titled `config.json` with the fol
   "api_key": "<CryptoCompare API key>",
   "private_key": "<wallet_private_key>",
   "custom_rpc_https": "",
-  "other_mint": "",
-  "other_mint_symbol": "",
-  "price_update_seconds": "",
-  "trading_interval_minutes": ""
+  "other_mint": ""
 }
 ```
-Next, install the dependencies for Soltrade by opening Python and running the following command.
+In addition to these required parameters, there are some additional ones that can be used as well.
+Keep in mind that Jupiter often experiences issues when working with low slippage, so we recommend using at least a 0.5% fee or greater to minimize transaction issues. 
+| Parameter                  | Description                                               | Default   |
+|----------------------------|-----------------------------------------------------------|:---------:|
+| `other_mint_symbol`        | ticker symbol of custom token                             | `UNKNOWN` |
+| `price_update_seconds`     | second-based time interval between token price updates    |    `60`   |
+| `trading_interval_minutes` | minute-based time interval for technical analysis         |    `1`    |
+| `slippage`                 | slippage % in BPS utilized by Jupiter during transactions |    `50`   |
+
+### Installation
+In order to install the dependencies for Soltrade, open Python and run the following command.
 This will install automatically install the required modules and their respective versions.
 ```
 python -m pip install -r requirements.txt
@@ -47,10 +54,10 @@ After the installation has been completed, begin Soltrade by running `soltrade.p
 Then, use the designated inputs to pause, resume, or quit the program.
 
 ### Contributions
-if you have any interest in contributing, fork the repository and submit a pull request to have your improvements merged into the main repository. When opening an issue or feature request, be sure to provide a clear title and description of the issue you are experiencing or the feature you would like to suggest. Once submitted, I will review the issue and respond as soon as possible.
+if you have any interest in contributing, fork the repository and submit a pull request to have your improvements merged into the main repository. When opening an issue or feature request, be sure to provide a clear title and description of the issue you are experiencing or the feature you would like to suggest. Once submitted, we will review the issue and respond as soon as possible.
 
 ### Donations
-Soltrade does not include a platform fee and will remain free forever.
+Soltrade does not currently include a platform fee and will remain open-source forever.
 If you're feeling a bit more generous however, please donate to my $SOL address below.
 ```
 6XeQkUDZdsGsKBrhGWRuweHu4nbcv23t8r8vPt5xEsMv
