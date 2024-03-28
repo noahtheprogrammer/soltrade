@@ -133,6 +133,6 @@ dmypy.json
 
 # Visual Studio Code
 .vscode
-
+.idea/
 
 config.json
