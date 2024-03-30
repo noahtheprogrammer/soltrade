@@ -10,7 +10,7 @@ from soltrade.config import config
 
 # Returns the current balance of token in the wallet
 @handle_rate_limiting()
-def find_balance(token_mint):
+def find_balance(token_mint: str) -> float:
     if token_mint == config().sol_mint:
         balance_response = config().client.get_balance(config().public_address).value
         balance_response = balance_response / (10 ** 9)

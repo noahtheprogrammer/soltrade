@@ -50,7 +50,7 @@ class Config:
                 exit(1)
 
     @property
-    def keypair(self):
+    def keypair(self) -> Keypair:
         try:
             return Keypair.from_bytes(base58.b58decode(self.private_key))
         except Exception as e:
@@ -58,16 +58,16 @@ class Config:
             exit(1)
 
     @property
-    def public_address(self):
+    def public_address(self) -> Pubkey:
         return self.keypair.pubkey()
 
     @property
-    def client(self):
+    def client(self) -> Client:
         rpc_url = self.custom_rpc_https
         return Client(rpc_url)
     
     @property
-    def decimals(self):
+    def decimals(self) -> int:
         response = self.client.get_account_info_json_parsed(Pubkey.from_string(config().other_mint)).to_json()
         json_response = json.loads(response)
         value = 10**json_response["result"]["value"]["data"]["parsed"]["info"]["decimals"]
@@ -77,7 +77,7 @@ class Config:
 _config_instance = None
 
 
-def config(path=None):
+def config(path=None) -> Config:
     global _config_instance
     if _config_instance is None and path is not None:
         _config_instance = Config(path)

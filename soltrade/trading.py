@@ -13,7 +13,7 @@ from soltrade.config import config
 market('position.json')
 
 # Pulls the candlestick information in fifteen minute intervals
-def fetch_candlestick():
+def fetch_candlestick() -> dict:
     url = "https://min-api.cryptocompare.com/data/v2/histominute"
     headers = {'authorization': config().api_key}
     params = {'fsym': config().other_mint_symbol, 'tsym': 'USD', 'limit': 50, 'aggregate': config().trading_interval_minutes}

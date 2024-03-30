@@ -22,7 +22,7 @@ class CustomFormatter(logging.Formatter):
         logging.CRITICAL: bold_red + format + reset
     }
 
-    def format(self, record):
+    def format(self, record) -> str:
         log_fmt = self.FORMATS.get(record.levelno)
         formatter = logging.Formatter(log_fmt, datefmt="%Y-%m-%d %H:%M:%S")
         return formatter.format(record)
@@ -34,7 +34,7 @@ class AutoFlushStreamHandler(StreamHandler):
         self.flush()
 
 
-def setup_logger(name, log_file, level=logging.INFO, add_to_general=False):
+def setup_logger(name, log_file, level=logging.INFO, add_to_general=False) -> logging.Logger:
     """Function to set up a logger with rotating file handler and console output."""
     # Formatter without color codes for file output
     file_formatter = logging.Formatter("%(asctime)s     %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
