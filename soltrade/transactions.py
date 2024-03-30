@@ -1,6 +1,7 @@
 import httpx
 import json
 import asyncio
+import os
 
 import base64
 from solana.rpc.types import TxOpts
@@ -14,21 +15,47 @@ from soltrade.config import config
 
 
 class MarketPosition:
-    _instance = None
+    def __init__(self, path):
+        self.path = path
+        self.is_open = False
+        self.sl = 0
+        self.tp = 0
+        self.load_position()
+        self.update_position(self.is_open, self.sl, self.tp)
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(MarketPosition, cls).__new__(cls)
-            cls._instance._position = False  # Use a different name for the internal attribute
-        return cls._instance
+    def load_position(self):
+        if os.path.exists(self.path):
+            with open(self.path, 'r') as file:
+                position_data = json.load(file)
+                self.is_open = position_data["is_open"]
+                self.sl = position_data["sl"]
+                self.tp = position_data["tp"]
+        else:
+            self.update_position(self.is_open, self.sl, self.tp)
+            
+    def update_position(self, position, stoploss, takeprofit):
+        self.sl = stoploss
+        self.tp = takeprofit
+        self.is_open = position
+        position_obj = {
+            "is_open": position,
+            "sl": stoploss,
+            "tp": takeprofit
+        }
+        with open(self.path, 'w') as file:
+            json.dump(position_obj, file)
 
     @property
     def position(self):
-        return self._instance._position
+        return self.is_open
+    
+_market_instance = None
 
-    @position.setter
-    def position(self, value):
-        self._instance._position = value
+def market(path=None):
+    global _market_instance
+    if _market_instance is None and path is not None:
+        _market_instance = MarketPosition(path)
+    return _market_instance
 
 
 # Returns the route to be manipulated in createTransaction()
@@ -127,7 +154,7 @@ async def perform_swap(sent_amount: float, sent_token_mint: str):
 
     if tx_error or not is_tx_successful:
         log_general.error("Soltrade failed to complete the transaction due to slippage issues with Jupiter.")
-        return
+        return False
 
     if sent_token_mint == config().usdc_mint:
         decimals = config().decimals
@@ -137,5 +164,4 @@ async def perform_swap(sent_amount: float, sent_token_mint: str):
         usdc_decimals = 10**6 # TODO: make this a constant variable in utils.py
         bought_amount = int(quote['outAmount']) / usdc_decimals
         log_transaction.info(f"Sold {sent_amount} {config().other_mint_symbol} for {bought_amount:.2f} USDC")
-
-    MarketPosition().position = sent_token_mint == config().usdc_mint
+    return True
