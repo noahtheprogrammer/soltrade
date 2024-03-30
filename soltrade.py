@@ -9,7 +9,7 @@ config_path = 'config.json'
 config(config_path)
 
 
-def check_json_state():
+def check_json_state() -> bool:
     if config().keypair and config().other_mint:
         return True
     return False

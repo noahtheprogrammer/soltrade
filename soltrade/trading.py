@@ -20,7 +20,7 @@ price = 0
 
 
 # Pulls the candlestick information in fifteen minute intervals
-def fetch_candlestick():
+def fetch_candlestick() -> dict:
     url = "https://min-api.cryptocompare.com/data/v2/histominute"
     headers = {'authorization': config().api_key}
     params = {'fsym': config().other_mint_symbol, 'tsym': 'USD', 'limit': 50, 'aggregate': config().trading_interval_minutes}
@@ -117,7 +117,7 @@ def start_trading():
             exit()
 
 
-def get_statistics():
+def get_statistics() -> str:
     return f"""
 
 Short EMA                           {ema_short}

@@ -32,8 +32,8 @@ class MarketPosition:
 
 
 # Returns the route to be manipulated in createTransaction()
-async def create_exchange(input_amount, input_token_mint):
-    log_transaction.info(f"Creating exchange for {input_amount} {input_token_mint}")
+async def create_exchange(input_amount: int, input_token_mint: str) -> dict:
+    log_transaction.info(f"Soltrade is creating exchange for {input_amount} {input_token_mint}")
 
     # Determines what mint address should be used in the api link
     if input_token_mint == config().usdc_mint:
@@ -52,7 +52,7 @@ async def create_exchange(input_amount, input_token_mint):
 
 
 # Returns the swap_transaction to be manipulated in sendTransaction()
-async def create_transaction(quote):
+async def create_transaction(quote: dict) -> dict:
     log_transaction.info(f"""Soltrade is creating transaction for the following quote: 
 {quote}""")
 
@@ -71,7 +71,7 @@ async def create_transaction(quote):
 
 
 # Deserializes and sends the transaction from the swap information given
-def send_transaction(swap_transaction, opts):
+def send_transaction(swap_transaction: dict, opts: TxOpts) -> Signature:
     raw_txn = VersionedTransaction.from_bytes(base64.b64decode(swap_transaction))
     signature = config().keypair.sign_message(message.to_bytes_versioned(raw_txn.message))
     signed_txn = VersionedTransaction.populate(raw_txn.message, [signature])
@@ -81,18 +81,18 @@ def send_transaction(swap_transaction, opts):
     log_transaction.info(f"Soltrade TxID: {txid}")
     return txid
 
-def find_transaction_error(txid: Signature):
+def find_transaction_error(txid: Signature) -> dict:
     json_response = config().client.get_transaction(txid, max_supported_transaction_version=0).to_json()
     parsed_response = json.loads(json_response)["result"]["meta"]["err"]
     return parsed_response
 
-def find_last_valid_block_height():
+def find_last_valid_block_height() -> dict:
     json_response = config().client.get_latest_blockhash(commitment="confirmed").to_json()
     parsed_response = json.loads(json_response)["result"]["value"]["lastValidBlockHeight"]
     return parsed_response
 
 # Uses the previous functions and parameters to exchange Solana token currencies
-async def perform_swap(sent_amount, sent_token_mint):
+async def perform_swap(sent_amount: float, sent_token_mint: str):
     global position
     log_general.info("Soltrade is taking a market position.")
 
