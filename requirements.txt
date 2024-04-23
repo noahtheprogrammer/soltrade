@@ -3,6 +3,7 @@ backtrader==1.9.76.123
 base58==2.1.1
 httpx==0.23.3
 pandas==1.5.3
-requests==2.28.2
+requests==2.31
 solana==0.29.0
-matplotlib==3.2.2
+matplotlib==3.8
+solders~=0.14.4
