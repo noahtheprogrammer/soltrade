@@ -5,9 +5,7 @@ from soltrade.log import log_general
 
 
 # Initialize configuration
-config_path = 'config.json'
-config(config_path)
-
+config()
 
 def check_json_state() -> bool:
     if config().keypair and config().other_mint:

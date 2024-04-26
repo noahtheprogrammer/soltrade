@@ -16,7 +16,7 @@ market('position.json')
 def fetch_candlestick() -> dict:
     url = "https://min-api.cryptocompare.com/data/v2/histominute"
     headers = {'authorization': config().api_key}
-    params = {'fsym': config().other_mint_symbol, 'tsym': 'USD', 'limit': 50, 'aggregate': config().trading_interval_minutes}
+    params = {'e': config().exchange, 'tsym': config().primary_mint_symbol, 'fsym': config().other_mint_symbol, 'limit': 50, 'aggregate': config().trading_interval_minutes}
     response = requests.get(url, headers=headers, params=params)
     if response.json().get('Response') == 'Error':
         log_general.error(response.json().get('Message'))
@@ -64,14 +64,14 @@ take_profit:            {takeprofit}
 """)
 
     if not market().position:
-        usdc_balance = find_balance(config().usdc_mint)
-        input_amount = round(usdc_balance, 1) - 0.01
+        tradable_balance = find_balance(config().primary_mint)
+        input_amount = round(tradable_balance, 1) - 0.01
         if (ema_short > ema_medium or price < lower_bb.iat[-1]) and rsi <= 31:
             log_transaction.info("Soltrade has detected a buy signal.")
-            if input_amount <= 0 or input_amount >= usdc_balance:
+            if input_amount <= 0 or input_amount >= tradable_balance:
                 log_transaction.warning("Soltrade has detected a buy signal, but does not have enough USDC to trade.")
                 return
-            is_swapped = asyncio.run(perform_swap(input_amount, config().usdc_mint))
+            is_swapped = asyncio.run(perform_swap(input_amount, config().primary_mint))
             if is_swapped:
                 stoploss = market().sl = cl.iat[-1] * 0.925
                 takeprofit = market().tp = cl.iat[-1] * 1.25
