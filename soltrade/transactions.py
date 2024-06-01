@@ -63,11 +63,11 @@ async def create_exchange(input_amount: int, input_token_mint: str) -> dict:
     log_transaction.info(f"Soltrade is creating exchange for {input_amount} {input_token_mint}")
 
     # Determines what mint address should be used in the api link
-    if input_token_mint == config().usdc_mint:
+    if input_token_mint == config().primary_mint:
         output_token_mint = config().other_mint
         token_decimals = 10**6  # USDC decimals
     else:
-        output_token_mint = config().usdc_mint
+        output_token_mint = config().primary_mint
         token_decimals = config().decimals
     
     # Finds the response and converts it into a readable array
@@ -156,7 +156,7 @@ async def perform_swap(sent_amount: float, sent_token_mint: str):
         log_general.error("Soltrade failed to complete the transaction due to slippage issues with Jupiter.")
         return False
 
-    if sent_token_mint == config().usdc_mint:
+    if sent_token_mint == config().primary_mint:
         decimals = config().decimals
         bought_amount = int(quote['outAmount']) / decimals
         log_transaction.info(f"Sold {sent_amount} USDC for {bought_amount:.6f} {config().other_mint_symbol}")

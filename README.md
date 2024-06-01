@@ -16,23 +16,22 @@ The creators and contributors of Soltrade are not responsible for any losses you
 
 ### Setup
 In order to use Soltrade you will need a free CryptoCompare API key and access to a wallet application such as Phantom.
-Open the installation folder and create a file titled `config.json` with the following code block, replacing the placeholder values with your API key and wallet private key. Both keys are required to receive pricing data and perform trading transactions.
+Open the installation folder and create a file titled `.env` with the following code block, replacing the placeholder values with your API key and wallet private key. Both keys are required to receive pricing data and perform trading transactions.
 ```
-{
-  "api_key": "<CryptoCompare API key>",
-  "private_key": "<wallet_private_key>",
-  "custom_rpc_https": "",
-  "other_mint": ""
-}
+API_KEY=YOUR_CRYPTOCOMPARE_KEY
+WALLET_PRIVATE_KEY=YOUR_PRIVATE_KEY
+SECONDARY_MINT=SECONDARY_TOKEN_ADDRESS
 ```
 In addition to these required parameters, there are some additional ones that can be used as well.
 Keep in mind that Jupiter often experiences issues when working with low slippage, so we recommend using at least a 0.5% fee or greater to minimize transaction issues. 
 | Parameter                  | Description                                               | Default   |
 |----------------------------|-----------------------------------------------------------|:---------:|
-| `other_mint_symbol`        | ticker symbol of custom token                             | `UNKNOWN` |
-| `price_update_seconds`     | second-based time interval between token price updates    |    `60`   |
-| `trading_interval_minutes` | minute-based time interval for technical analysis         |    `1`    |
-| `slippage`                 | slippage % in BPS utilized by Jupiter during transactions |    `50`   |
+| `PRIMARY_MINT_SYMBOL`      | ticker symbol of main token                               |   `USD`   |
+| `PRIMARY_MINT`             | token address of main currency                            | `EPjF..v` |
+| `SECONDARY_MINT_SYMBOL`    | ticker symbol of custom token                             | `UNKNOWN` |
+| `PRICE_UPDATE_SECONDS`     | second-based time interval between token price updates    |    `60`   |
+| `TRADING_INTERVALS_MINUTE` | minute-based time interval for technical analysis         |    `1`    |
+| `SLIPPAGE`                 | slippage % in BPS utilized by Jupiter during transactions |    `50`   |
 
 ### Installation
 In order to install the dependencies for Soltrade, open Python and run the following command.
@@ -47,6 +46,21 @@ Alternatively, you can install using poetry:
 python -m pip install poetry
 poetry install
 ```
+
+### Docker
+Build the Soltrade Docker image using the following command:
+```
+docker build -t soltrade_bot .
+```
+Once the image is built, you can run the Soltrade bot container using:
+```
+docker run -d --name soltrade_bot \
+    -e API_KEY=<CryptoCompare API key> \
+    -e WALLET_PRIVATE_KEY=<wallet_private_key> \
+    -e SECOND_MINT=<token_address> \
+    soltrade_bot
+```
+Replace <CryptoCompare API key>, <wallet_private_key>, and <token_address> with your actual values before running the command.
 
 ### Usage
 Before starting Soltrade, make sure you have deposited at least 1 of the selected $TOKEN in your connected wallet, along with ~0.1 $SOL to cover any additional transaction fees.

@@ -137,3 +137,5 @@ dmypy.json
 .idea/
 
 config.json
+.env
+docker-compose.yaml

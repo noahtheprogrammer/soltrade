@@ -5,9 +5,7 @@ from soltrade.log import log_general
 
 
 # Initialize configuration
-config_path = 'config.json'
-config(config_path)
-
+config()
 
 def check_json_state() -> bool:
     if config().keypair and config().other_mint:
@@ -28,9 +26,9 @@ can_run = check_json_state()
 
 # Error catching in case the program is unable to find the properties of the wallet
 try:
-    log_general.info(f"Soltrade has detected {find_balance(config().other_mint)} {config().other_mint_symbol} tokens available for trading.")
+    log_general.info(f"Soltrade has detected {find_balance(config().primary_mint)} {config().primary_mint_symbol} tokens available for trading.")
 except Exception as e:
-    log_general.error(f"Error finding {config().other_mint_symbol} balance: {e}")
+    log_general.error(f"Error finding {config().primary_mint_symbol} balance: {e}")
     exit()
 
 # Checks if the run prompt should be displayed
