@@ -16,7 +16,7 @@ market('position.json')
 def fetch_candlestick() -> dict:
     url = "https://min-api.cryptocompare.com/data/v2/histominute"
     headers = {'authorization': config().api_key}
-    params = {'e': config().exchange, 'tsym': config().primary_mint_symbol, 'fsym': config().other_mint_symbol, 'limit': 50, 'aggregate': config().trading_interval_minutes}
+    params = {'tsym': config().primary_mint_symbol, 'fsym': config().other_mint_symbol, 'limit': 50, 'aggregate': config().trading_interval_minutes}
     response = requests.get(url, headers=headers, params=params)
     if response.json().get('Response') == 'Error':
         log_general.error(response.json().get('Message'))

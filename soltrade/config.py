@@ -16,7 +16,6 @@ class Config:
         self.api_key = None
         self.private_key = None
         self.custom_rpc_https = None
-        self.exchange = None
         self.primary_mint = None
         self.primary_mint_symbol = None
         self.sol_mint = "So11111111111111111111111111111111111111112"
@@ -30,17 +29,17 @@ class Config:
 
     def load_config(self):
         self.api_key = os.getenv('API_KEY')
-        self.exchange = os.getenv('EXCHANGE', "cccagg_or_exchange")
         self.private_key = os.getenv("WALLET_PRIVATE_KEY")
         self.custom_rpc_https = os.getenv("custom_rpc_https", "https://api.mainnet-beta.solana.com/")
         self.primary_mint = os.getenv("PRIMARY_MINT", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")
         self.primary_mint_symbol = os.getenv("PRIMARY_MINT_SYMBOL", "USD")
-        self.other_mint = os.getenv("SECOND_MINT", "")
-        self.other_mint_symbol = os.getenv("SECOND_MINT_SYMBOL", "UNKNOWN")
+        self.other_mint = os.getenv("SECONDARY_MINT", "")
+        self.other_mint_symbol = os.getenv("SECONDARY_MINT_SYMBOL", "UNKNOWN")
         self.price_update_seconds = int(os.getenv("PRICE_UPDATE_SECONDS") or 60)
         self.trading_interval_minutes = int(os.getenv("TRADING_INTERVALS_MINUTE") or 1)
         self.slippage = int(os.getenv("SLIPPAGE") or 50)
-        # default fee of roughly $.04 today
+
+        # DEFAULT FEE OF ROUGHLY $0.04 TODAY
         self.computeUnitPriceMicroLamports = int(os.getenv("COMPUTE_UNIT_PRICE_MICRO_LAMPORTS") or 20 * 14000)
 
     @property

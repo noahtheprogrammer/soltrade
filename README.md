@@ -18,18 +18,17 @@ The creators and contributors of Soltrade are not responsible for any losses you
 In order to use Soltrade you will need a free CryptoCompare API key and access to a wallet application such as Phantom.
 Open the installation folder and create a file titled `.env` with the following code block, replacing the placeholder values with your API key and wallet private key. Both keys are required to receive pricing data and perform trading transactions.
 ```
-API_KEY=<CryptoCompare API key>
-WALLET_PRIVATE_KEY=<wallet_private_key>
-SECOND_MINT=
+API_KEY=YOUR_CRYPTOCOMPARE_KEY
+WALLET_PRIVATE_KEY=YOUR_PRIVATE_KEY
+SECONDARY_MINT=SECONDARY_TOKEN_ADDRESS
 ```
 In addition to these required parameters, there are some additional ones that can be used as well.
 Keep in mind that Jupiter often experiences issues when working with low slippage, so we recommend using at least a 0.5% fee or greater to minimize transaction issues. 
 | Parameter                  | Description                                               | Default   |
 |----------------------------|-----------------------------------------------------------|:---------:|
-| `EXCHANGE`                 | exchange for retrieving data                              | `UNKNOWN` |
 | `PRIMARY_MINT_SYMBOL`      | ticker symbol of main token                               |   `USD`   |
 | `PRIMARY_MINT`             | token address of main currency                            | `EPjF..v` |
-| `SECOND_MINT_SYMBOL`       | ticker symbol of custom token                             | `UNKNOWN` |
+| `SECONDARY_MINT_SYMBOL`    | ticker symbol of custom token                             | `UNKNOWN` |
 | `PRICE_UPDATE_SECONDS`     | second-based time interval between token price updates    |    `60`   |
 | `TRADING_INTERVALS_MINUTE` | minute-based time interval for technical analysis         |    `1`    |
 | `SLIPPAGE`                 | slippage % in BPS utilized by Jupiter during transactions |    `50`   |
