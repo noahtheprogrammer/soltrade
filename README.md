@@ -55,17 +55,18 @@ docker build -t soltrade_bot .
 Once the image is built, you can run the Soltrade bot container using:
 ```
 docker run -d --name soltrade_bot \
-    -e API_KEY=<CryptoCompare API key> \
+    -e API_KEY=<cryptocompare_api_key> \
     -e WALLET_PRIVATE_KEY=<wallet_private_key> \
     -e SECOND_MINT=<token_address> \
     soltrade_bot
 ```
-Replace <CryptoCompare API key>, <wallet_private_key>, and <token_address> with your actual values before running the command.
+Replace `<cryptocompare_api_key>`, `<wallet_private_key>`, and `<token_address>` with your actual values before running the command.
 
 ### Usage
-Before starting Soltrade, make sure you have deposited at least 1 of the selected $TOKEN in your connected wallet, along with ~0.1 $SOL to cover any additional transaction fees.
+Before starting Soltrade, make sure you have deposited at least 1 of the selected primary $TOKEN in your connected wallet, along with ~0.1 $SOL to cover any additional transaction fees.
 After the installation has been completed, begin Soltrade by running `soltrade.py` on your desktop or using Python commands.
-Then, use the designated inputs to pause, resume, or quit the program.
+Soltrade will automatically display indicator information as determined by the value of the `PRICE_UPDATE_SECONDS` environment variable.
+Market positions, as well as stoploss and takeprofit, are automatically saved and can be viewed in the `position.json` file generated at startup.
 
 ### Contributions
 if you have any interest in contributing, fork the repository and submit a pull request to have your improvements merged into the main repository. When opening an issue or feature request, be sure to provide a clear title and description of the issue you are experiencing or the feature you would like to suggest. Once submitted, we will review the issue and respond as soon as possible.
