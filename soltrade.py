@@ -8,7 +8,7 @@ from soltrade.log import log_general
 config()
 
 def check_json_state() -> bool:
-    if config().keypair and config().other_mint:
+    if config().keypair and config().secondary_mint:
         return True
     return False
 
