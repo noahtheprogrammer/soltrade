@@ -69,7 +69,7 @@ take_profit:            {takeprofit}
         if (ema_short > ema_medium or price < lower_bb.iat[-1]) and rsi <= 31:
             log_transaction.info("Soltrade has detected a buy signal.")
             if input_amount <= 0:
-                log_transaction.warning("Soltrade has detected a buy signal, but does not have enough USDC to trade.")
+                log_transaction.warning(f"Soltrade has detected a buy signal, but does not have enough {config().primary_mint_symbol} to trade.")
                 return
             is_swapped = asyncio.run(perform_swap(input_amount, config().primary_mint))
             if is_swapped:
