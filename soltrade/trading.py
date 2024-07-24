@@ -39,8 +39,7 @@ def perform_analysis():
     # Creates DataFrame for manipulation
     columns = ['close', 'high', 'low', 'open', 'time']
     df = pd.DataFrame(candle_dict, columns=columns)
-    df['time'] = pd.to_datetime(df['time'], unit='s')
-    
+    df['time'] = pd.to_datetime(df['time'], unit='s') 
     df = strategy(df)
     print(df.tail(2))
 
@@ -98,14 +97,29 @@ def perform_analysis():
             
         # Check Strategy
         if df['exit'].iloc[-1] == 1:
-            exit_msg = f"Soltrade has detected a sell signal for {input_amount} ${config().secondary_mint_symbol}.."
+            exit_msg = f"Soltrade has detected a sell signal for {input_amount} ${config().secondary_mint_symbol}."
             log_transaction.info(exit_msg)
             # log_transaction.info(get_statistics())
             asyncio.run(perform_swap(input_amount, config().secondary_mint))
             stoploss = takeprofit = 0
             df['entry_price'] = None
 
+# This starts the trading function on a timer
+def start_trading():
+    log_general.info("Soltrade has now initialized the trading algorithm.")
     trading_sched = BlockingScheduler()
     trading_sched.add_job(perform_analysis, 'interval', seconds=config().price_update_seconds, max_instances=1)
     trading_sched.start()
     perform_analysis()
+
+# Function to save DataFrame to JSON file
+def save_dataframe_to_json(df, file_path):
+    df_json = df.to_json(orient='records')
+    with open(file_path, 'w') as f:
+        json.dump(df_json, f)
+
+# Function to read DataFrame from JSON file
+def read_dataframe_from_json(file_path):
+    with open(file_path, 'r') as f:
+        df_json = json.load(f)
+    return pd.read_json(df_json)
