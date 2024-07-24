@@ -12,8 +12,6 @@ from solders import message
 
 from soltrade.log import log_general, log_transaction
 from soltrade.config import config
-from soltrade.tg_bot import send_info
-
 
 class MarketPosition:
     def __init__(self, path):

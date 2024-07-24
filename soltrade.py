@@ -1,4 +1,3 @@
-import asyncio
 from soltrade.wallet import find_balance
 from soltrade.config import config
 from soltrade.trading import start_trading

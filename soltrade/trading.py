@@ -10,7 +10,6 @@ from soltrade.strategy import strategy, calc_stoploss, calc_trailing_stoploss
 from soltrade.wallet import find_balance
 from soltrade.log import log_general, log_transaction
 from soltrade.config import config
-from soltrade.tg_bot import send_info
 
 market('position.json')
 
