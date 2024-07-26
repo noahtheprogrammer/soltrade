@@ -46,8 +46,6 @@ def strategy(df: pd.DataFrame):
     if config().strategy == 'custom':
 
         df['cci'] = ta.CCI(df)
-
-
     
 def calc_stoploss(df):
     # Can also write custom stoploss functions using indicators.
@@ -84,6 +82,3 @@ def calc_trailing_stoploss(df):
     df['trailing_stoploss_target'] = df['entry_price'] * (1 + tslt / 100)
 
     return df
-
-
-

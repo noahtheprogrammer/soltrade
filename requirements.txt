@@ -8,3 +8,4 @@ solana==0.29.0
 matplotlib==3.8
 solders==0.14.4
 python-dotenv==1.0.1
+pandas_ta==0.3.14b0
