@@ -6,6 +6,7 @@ from apscheduler.schedulers.background import BlockingScheduler
 
 from soltrade.transactions import perform_swap, market
 from soltrade.indicators import calculate_ema, calculate_rsi, calculate_bbands
+from soltrade.strategy import strategy, calc_stoploss, calc_trailing_stoploss
 from soltrade.wallet import find_balance
 from soltrade.log import log_general, log_transaction
 from soltrade.config import config
@@ -27,7 +28,7 @@ def fetch_candlestick() -> dict:
 def perform_analysis():
     log_general.debug("Soltrade is analyzing the market; no trade has been executed.")
 
-    global stoploss, takeprofit
+    global stoploss, takeprofit, trailing_stoploss, entry_price
 
     market().load_position()
 
@@ -36,71 +37,89 @@ def perform_analysis():
     candle_dict = candle_json["Data"]["Data"]
 
     # Creates DataFrame for manipulation
-    columns = ['close', 'high', 'low', 'open', 'time', 'VF', 'VT']
+    columns = ['close', 'high', 'low', 'open', 'time']
     df = pd.DataFrame(candle_dict, columns=columns)
-    df['time'] = pd.to_datetime(df['time'], unit='s')
+    df['time'] = pd.to_datetime(df['time'], unit='s') 
+    df = strategy(df)
+    print(df.tail(2))
 
-    # DataFrame variable for TA-Lib manipulation
-    cl = df['close']
-
-    # Technical analysis values used in trading algorithm
-    price = cl.iat[-1]
-    ema_short = calculate_ema(dataframe=df, length=5)
-    ema_medium = calculate_ema(dataframe=df, length=20)
-    rsi = calculate_rsi(dataframe=df, length=14)
-    upper_bb, lower_bb = calculate_bbands(dataframe=df, length=14)
-    stoploss = market().sl
-    takeprofit = market().tp
-
-    log_general.debug(f"""
-price:                  {price}
-short_ema:              {ema_short}
-med_ema:                {ema_medium}
-upper_bb:               {upper_bb.iat[-1]}
-lower_bb:               {lower_bb.iat[-1]}
-rsi:                    {rsi}
-stop_loss               {stoploss}
-take_profit:            {takeprofit}
-""")
-
-    if not market().position:
+    if not MarketPosition().position:
         input_amount = find_balance(config().primary_mint)
-
-        if (ema_short > ema_medium or price < lower_bb.iat[-1]) and rsi <= 31:
-            log_transaction.info("Soltrade has detected a buy signal.")
+        if df['entry'].iloc[-1] == 1:
+            buy_msg = f"Soltrade has detected a buy signal using {input_amount} ${config().primary_mint_symbol}."
+            log_transaction.info(buy_msg)
+            # log_transaction.info(get_statistics())
             if input_amount <= 0:
-                log_transaction.warning(f"Soltrade has detected a buy signal, but does not have enough {config().primary_mint_symbol} to trade.")
+                fund_msg = f"Soltrade has detected a buy signal, but does not have enough ${config().primary_mint_symbol} to trade."
+                log_transaction.info(fund_msg)
                 return
-            is_swapped = asyncio.run(perform_swap(input_amount, config().primary_mint))
-            if is_swapped:
-                stoploss = market().sl = cl.iat[-1] * 0.925
-                takeprofit = market().tp = cl.iat[-1] * 1.25
-                market().update_position(True, stoploss, takeprofit)
-            return
-    else:
+            asyncio.run(perform_swap(input_amount, config().primary_mint))
+            df['entry_price'] = df['close'].iloc[-1]
+            entry_price = df['entry_price']
+            df = calc_stoploss(df)
+            df = calc_trailing_stoploss(df)
+            stoploss = df['stoploss'].iloc[-1]
+            trailing_stoploss = df['trailing_stoploss'].iloc[-1]
+            print(df.tail(2))
+            # Save DataFrame to JSON file
+            json_file_path = 'data.json'
+            save_dataframe_to_json(df, json_file_path)
+
+            
+    else:        
+    # Read DataFrame from JSON file
+        df = read_dataframe_from_json(json_file_path)
+        print(df.tail(2))
         input_amount = find_balance(config().secondary_mint)
+        df = calc_trailing_stoploss(df)
+        stoploss = df['stoploss'].iloc[-1]
+        trailing_stoploss = df['trailing_stoploss'].iloc[-1]
+        print(stoploss, trailing_stoploss)
+        
+        # Check Stoploss
+        if df['close'].iloc[-1] <= stoploss:
+            sl_msg = f"Soltrade has detected a sell signal for {input_amount} ${config().secondary_mint_symbol}. Stoploss has been reached."
+            log_transaction.info(sl_msg)
+            # log_transaction.info(get_statistics())
+            asyncio.run(perform_swap(input_amount, config().secondary_mint))
+            stoploss = takeprofit = 0
+            df['entry_price'] = None
 
-        if price <= stoploss or price >= takeprofit:
-            log_transaction.info("Soltrade has detected a sell signal. Stoploss or takeprofit has been reached.")
-            is_swapped = asyncio.run(perform_swap(input_amount, config().secondary_mint))
-            if is_swapped:
-                stoploss = takeprofit = market().sl = market().tp = 0
-                market().update_position(False, stoploss, takeprofit)
-            return
-
-        if (ema_short < ema_medium or price > upper_bb.iat[-1]) and rsi >= 68:
-            log_transaction.info("Soltrade has detected a sell signal. EMA or BB has been reached.")
-            is_swapped = asyncio.run(perform_swap(input_amount, config().secondary_mint))
-            if is_swapped:
-                stoploss = takeprofit = market().sl = market().tp = 0
-                market().update_position(False, stoploss, takeprofit)
-            return
+        # Check Trailing Stoploss
+        if trailing_stoploss is not None:
+            if df['close'].iloc[-1] < trailing_stoploss:
+                tsl_msg = f"Soltrade has detected a sell signal for {input_amount} ${config().secondary_mint_symbol}. Trailing stoploss has been reached."
+                log_transaction.info(tsl_msg)
+                # log_transaction.info(get_statistics())
+                asyncio.run(perform_swap(input_amount, config().secondary_mint))
+                stoploss = takeprofit = 0
+                df['entry_price'] = None
+            
+        # Check Strategy
+        if df['exit'].iloc[-1] == 1:
+            exit_msg = f"Soltrade has detected a sell signal for {input_amount} ${config().secondary_mint_symbol}."
+            log_transaction.info(exit_msg)
+            # log_transaction.info(get_statistics())
+            asyncio.run(perform_swap(input_amount, config().secondary_mint))
+            stoploss = takeprofit = 0
+            df['entry_price'] = None
 
 # This starts the trading function on a timer
 def start_trading():
     log_general.info("Soltrade has now initialized the trading algorithm.")
-
     trading_sched = BlockingScheduler()
     trading_sched.add_job(perform_analysis, 'interval', seconds=config().price_update_seconds, max_instances=1)
     trading_sched.start()
     perform_analysis()
+
+# Function to save DataFrame to JSON file
+def save_dataframe_to_json(df, file_path):
+    df_json = df.to_json(orient='records')
+    with open(file_path, 'w') as f:
+        json.dump(df_json, f)
+
+# Function to read DataFrame from JSON file
+def read_dataframe_from_json(file_path):
+    with open(file_path, 'r') as f:
+        df_json = json.load(f)
+    return pd.read_json(df_json)

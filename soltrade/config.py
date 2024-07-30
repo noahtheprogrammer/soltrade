@@ -25,6 +25,12 @@ class Config:
         self.trading_interval_minutes = None
         self.slippage = None  # BPS
         self.computeUnitPriceMicroLamports = None
+        self.stoploss = None
+        self.trailing_stoploss = None
+        self.trailing_stoploss_target = None
+        self.telegram = None
+        self.tg_bot_token = None
+        self.tg_bot_uid = None
         self.load_config()
 
     def load_config(self):
@@ -41,11 +47,24 @@ class Config:
 
         # DEFAULT FEE OF ROUGHLY $0.04 TODAY
         self.computeUnitPriceMicroLamports = int(os.getenv("COMPUTE_UNIT_PRICE_MICRO_LAMPORTS") or 20 * 14000)
+        
+        #with open(self.path, 'r') as file:
+        #    try:
+        #        config_data = json.load(file)
+        #        self.verbose = config_data.get("verbose", False)
+        #        self.strategy = config_data.get("strategy", "default")
+        #        self.stoploss = config_data["stoploss"]
+        #        self.trailing_stoploss = config_data["trailing_stoploss"]
+        #        self.trailing_stoploss_target = config_data["trailing_stoploss_target"]
 
     @property
     def keypair(self) -> Keypair:
         try:
-            return Keypair.from_bytes(base58.b58decode(self.private_key))
+            b58_string = self.private_key
+            keypair = Keypair.from_base58_string(b58_string)
+            # print(f"Using Wallet: {keypair.pubkey()}")
+
+            return keypair
         except Exception as e:
             log_general.error(f"Error decoding private key: {e}")
             exit(1)
