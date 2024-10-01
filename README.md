@@ -32,7 +32,7 @@ Keep in mind that Jupiter often experiences issues when working with low slippag
 | `PRICE_UPDATE_SECONDS`     | second-based time interval between token price updates    |             `60`              |
 | `TRADING_INTERVALS_MINUTE` | minute-based time interval for technical analysis         |              `1`              |
 | `SLIPPAGE`                 | slippage % in BPS utilized by Jupiter during transactions |             `50`              |
-| `JUP_BASE_URL`             | Base URL running Jupiter Swap API v6                      |`https://public.jupiterapi.com`|
+| `JUP_BASE_URL`             | Base URL running (Jupiter Swap API v6)[https://marketplace.quicknode.com/add-on/metis-jupiter-v6-swap-api]               |`https://public.jupiterapi.com`|
 
 ### Installation
 In order to install the dependencies for Soltrade, open Python and run the following command.
