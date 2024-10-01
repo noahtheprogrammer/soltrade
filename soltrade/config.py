@@ -34,6 +34,7 @@ class Config:
         self.primary_mint = os.getenv("PRIMARY_MINT", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")
         self.primary_mint_symbol = os.getenv("PRIMARY_MINT_SYMBOL", "USD")
         self.secondary_mint = os.getenv("SECONDARY_MINT", "")
+        self.jup_base_url = os.getenv("JUP_BASE_URL", "https://public.jupiterapi.com")
         self.secondary_mint_symbol = os.getenv("SECONDARY_MINT_SYMBOL", "UNKNOWN")
         self.price_update_seconds = int(os.getenv("PRICE_UPDATE_SECONDS") or 60)
         self.trading_interval_minutes = int(os.getenv("TRADING_INTERVALS_MINUTE") or 1)

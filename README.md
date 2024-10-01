@@ -24,14 +24,15 @@ SECONDARY_MINT=SECONDARY_TOKEN_ADDRESS
 ```
 In addition to these required parameters, there are some additional ones that can be used as well.
 Keep in mind that Jupiter often experiences issues when working with low slippage, so we recommend using at least a 0.5% fee or greater to minimize transaction issues. 
-| Parameter                  | Description                                               | Default   |
-|----------------------------|-----------------------------------------------------------|:---------:|
-| `PRIMARY_MINT_SYMBOL`      | ticker symbol of main token                               |   `USD`   |
-| `PRIMARY_MINT`             | token address of main currency                            | `EPjF..v` |
-| `SECONDARY_MINT_SYMBOL`    | ticker symbol of custom token                             | `UNKNOWN` |
-| `PRICE_UPDATE_SECONDS`     | second-based time interval between token price updates    |    `60`   |
-| `TRADING_INTERVALS_MINUTE` | minute-based time interval for technical analysis         |    `1`    |
-| `SLIPPAGE`                 | slippage % in BPS utilized by Jupiter during transactions |    `50`   |
+| Parameter                  | Description                                               | Default                       |
+|----------------------------|-----------------------------------------------------------|:-----------------------------:|
+| `PRIMARY_MINT_SYMBOL`      | ticker symbol of main token                               |             `USD`             |
+| `PRIMARY_MINT`             | token address of main currency                            |           `EPjF..v`           |
+| `SECONDARY_MINT_SYMBOL`    | ticker symbol of custom token                             |           `UNKNOWN`           |
+| `PRICE_UPDATE_SECONDS`     | second-based time interval between token price updates    |             `60`              |
+| `TRADING_INTERVALS_MINUTE` | minute-based time interval for technical analysis         |              `1`              |
+| `SLIPPAGE`                 | slippage % in BPS utilized by Jupiter during transactions |             `50`              |
+| `JUP_BASE_URL`             | Base URL running Jupiter Swap API v6                      |`https://public.jupiterapi.com`|
 
 ### Installation
 In order to install the dependencies for Soltrade, open Python and run the following command.
@@ -58,6 +59,7 @@ docker run -d --name soltrade_bot \
     -e API_KEY=<cryptocompare_api_key> \
     -e WALLET_PRIVATE_KEY=<wallet_private_key> \
     -e SECOND_MINT=<token_address> \
+    -e JUP_BASE_URL=<jup_url> \
     soltrade_bot
 ```
 Replace `<cryptocompare_api_key>`, `<wallet_private_key>`, and `<token_address>` with your actual values before running the command.
