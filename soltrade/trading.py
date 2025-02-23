@@ -79,6 +79,13 @@ take_profit:            {takeprofit}
             return
     else:
         input_amount = find_balance(config().secondary_mint)
+        
+        # sometimes position.json might contain wrong or outdated data
+        if input_amount == 0.0:
+            stoploss = takeprofit = market().sl = market().tp = 0
+            market().update_position(False, stoploss, takeprofit)
+            log_transaction.info("Soltrade has detected outdated data in position.json. Reseting position.")
+            return
 
         if price <= stoploss or price >= takeprofit:
             log_transaction.info("Soltrade has detected a sell signal. Stoploss or takeprofit has been reached.")
