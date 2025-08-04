@@ -16,13 +16,14 @@ class SoltradeStrategy(bt.Strategy):
     def next(self):
 
         if not self.position:
-            if self.data.close <= self.stoploss or self.data.close >= self.takeprofit:
-                self.close()
             if (self.ema_short > self.ema_medium or self.data.close < self.bb.lines.bot) and self.rsi <= 31:
                 self.buy()
                 self.stoploss = self.data.close * 0.925
                 self.takeprofit = self.data.close * 1.25
         else:
+            if self.data.close <= self.stoploss or self.data.close >= self.takeprofit:
+                self.close()
+                
             if (self.ema_short < self.ema_medium or self.data.close > self.bb.lines.top) and self.rsi >= 68:
                 self.close()
 
